@@ -55,7 +55,7 @@ namespace IntegrationTests
 
 ### Actual NUnitTest
 
-See the IntegrationTest project for a simple test that uses this setup class.
+See the IntegrationTest project in the GitHub repository for a simple test that uses this setup class.
 
 ### Setup
 
