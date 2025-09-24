@@ -3,7 +3,7 @@
 ### Overview
 
 `NugetBuildTargetsTestSetup` streamlines integration testing for NuGet packages providing build targets. 
-It creates a temporary nuget environment with a temporary dependent projects that are built for you enabling custom targets to be run and their behaviour asserted.
+It creates a temporary nuget environment with temporary dependent projects that are built for you, enabling custom targets to be run and their behaviour asserted.
 
 ### Constructor Requirements
 
@@ -52,6 +52,11 @@ namespace IntegrationTests
 }
 
 ```
+
+### Actual NUnitTest
+
+See the IntegrationTest project for a simple test that uses this setup class.
+
 ### Setup
 
 If additional files need to be added for the dependent project you can use the projectPathCallback parameter.
