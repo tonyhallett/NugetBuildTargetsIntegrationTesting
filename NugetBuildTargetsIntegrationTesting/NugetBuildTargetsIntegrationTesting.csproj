@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <PropertyGroup>
+        <Authors>TonyHUk</Authors>
+        <Description>Integration testing utility for .nupkg providing build targets.</Description>
+        <Copyright>Copyright © 2025 Tony Hallett</Copyright>
+        <RepositoryUrl>https://github.com/tonyhallett/NugetBuildTargetsIntegrationTesting.git</RepositoryUrl>
+        <PackageTags>NuGet;Build;Target;Targets;MSBuild;Integration;Test</PackageTags>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/tonyhallett/NugetBuildTargetsIntegrationTesting</PackageProjectUrl>
+        <Title>Nuget Build Targets Integration Testing</Title>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <IsPackable>True</IsPackable>
+    </PropertyGroup>
+    <ItemGroup>
+        <None Include="..\README.md" Pack="True" PackagePath="\" />
+    </ItemGroup>   
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>UnitTests</_Parameter1>
+        </AssemblyAttribute>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>DynamicProxyGenAssembly2</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
+</Project>
