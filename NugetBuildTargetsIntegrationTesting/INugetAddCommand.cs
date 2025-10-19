@@ -2,6 +2,6 @@ namespace NugetBuildTargetsIntegrationTesting
 {
     public interface INugetAddCommand
     {
-        void AddPackageToSource(string nupkgPath, string source);
+        void AddPackageToSource(string nupkgPath, string source, string? nugetCommandPath);
     }
 }

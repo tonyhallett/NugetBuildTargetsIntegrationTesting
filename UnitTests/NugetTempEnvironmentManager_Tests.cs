@@ -26,19 +26,19 @@ namespace UnitTests
         [Test]
         public void Should_Add_The_Package_To_Temp_Nuget_Source()
         {
-            _nugetTempEnvironmentManager.Setup("nupkgPath", project, "packageInstallPath");
+            _nugetTempEnvironmentManager.Setup("nupkgPath", project, "packageInstallPath", null);
 
-            _mockNugetAddCommand.Verify(nugetAddCommand => nugetAddCommand.AddPackageToSource("nupkgPath", "tempdir"), Times.Once);
+            _mockNugetAddCommand.Verify(nugetAddCommand => nugetAddCommand.AddPackageToSource("nupkgPath", "tempdir", null), Times.Once);
         }
 
         [Test]
         public void Should_Add_The_Package_To_Temp_Nuget_Source_Only_Once()
         {
-            _nugetTempEnvironmentManager.Setup("nupkgPath", project, "packageInstallPath");
-            _nugetTempEnvironmentManager.Setup("nupkgPath", project, "packageInstallPath");
+            _nugetTempEnvironmentManager.Setup("nupkgPath", project, "packageInstallPath", null);
+            _nugetTempEnvironmentManager.Setup("nupkgPath", project, "packageInstallPath", null);
 
             _mockIOUtilities.Verify(ioUtilities => ioUtilities.CreateTempDirectory(), Times.Once);
-            _mockNugetAddCommand.Verify(nugetAddCommand => nugetAddCommand.AddPackageToSource("nupkgPath", "tempdir"), Times.Once);
+            _mockNugetAddCommand.Verify(nugetAddCommand => nugetAddCommand.AddPackageToSource("nupkgPath", "tempdir", null), Times.Once);
         }
 
         [Test]
@@ -47,7 +47,7 @@ namespace UnitTests
             var propertyGroup = new XElement("PropertyGroup");
             _mockMsBuildProjectHelper.Setup(msBuildProjectHelper => msBuildProjectHelper.InsertPropertyGroup(project)).Returns(propertyGroup);
 
-            _nugetTempEnvironmentManager.Setup("nupkgPath", project, "packageInstallPath");
+            _nugetTempEnvironmentManager.Setup("nupkgPath", project, "packageInstallPath", null);
             
             _mockMsBuildProjectHelper.Verify(msBuildProjectHelper => msBuildProjectHelper.AddProperty(propertyGroup, "RestoreSources", "tempdir;"));
             _mockMsBuildProjectHelper.Verify(msBuildProjectHelper => msBuildProjectHelper.AddProperty(propertyGroup, "RestorePackagesPath", "packageInstallPath"));
@@ -56,7 +56,7 @@ namespace UnitTests
         [Test]
         public void Should_TryDeleteDirectoryRecursively_The_Temp_Local_Feed_Directory_On_CleanUp()
         {
-            _nugetTempEnvironmentManager.Setup("nupkgPath", project, "packageInstallPath");
+            _nugetTempEnvironmentManager.Setup("nupkgPath", project, "packageInstallPath", null);
 
             _nugetTempEnvironmentManager.CleanUp();
 

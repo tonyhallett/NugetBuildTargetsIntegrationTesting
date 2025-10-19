@@ -37,6 +37,11 @@ namespace NugetBuildTargetsIntegrationTesting
 
         public string SaveXDocumentToDirectory(XDocument doc, string directory, string fileName)
         {
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
             var path = Path.Combine(directory, fileName);
             doc.Save(path);
             return path;
@@ -44,5 +49,17 @@ namespace NugetBuildTargetsIntegrationTesting
 
         public XDocument XDocParse(string text) 
             => XDocument.Parse(text);
+
+        public void AddRelativeFile(string directory, string relativePath, string contents)
+        {
+            var filePath = Path.Combine(directory, relativePath);
+            var directoryPath = Path.GetDirectoryName(filePath);
+            if (!Directory.Exists(directoryPath))
+            {
+                Directory.CreateDirectory(directoryPath!);
+            }
+
+            File.WriteAllText(filePath, contents);
+        }
     }
 }

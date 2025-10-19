@@ -30,26 +30,26 @@ namespace NugetBuildTargetsIntegrationTesting
             _msBuildProjectHelper = msBuildProjectHelper;
         }
 
-        public void Setup(string nupkgPath, XDocument project, string packageInstallPath)
+        public void Setup(string nupkgPath, XDocument project, string packageInstallPath, string? nugetCommandPath)
         {
             var propertyGroup = _msBuildProjectHelper.InsertPropertyGroup(project);
 
-            SetUpForTempSource(nupkgPath, propertyGroup);
+            SetUpForTempSource(nupkgPath, propertyGroup, nugetCommandPath);
             SetupTempPackageInstallPath(propertyGroup, packageInstallPath);
         }
 
-        private void SetUpForTempSource(string nupkgPath, XElement propertyGroup)
+        private void SetUpForTempSource(string nupkgPath, XElement propertyGroup, string? nugetCommandPath)
         {
-            AddPackageToTempSource(nupkgPath);
+            AddPackageToTempSource(nupkgPath, nugetCommandPath);
             _msBuildProjectHelper.AddProperty(propertyGroup, "RestoreSources", $"{_localFeedPath!};");
         }
 
-        private void AddPackageToTempSource(string nupkgPath)
+        private void AddPackageToTempSource(string nupkgPath, string? nugetCommandPath)
         {
             _localFeedPath ??= _ioUtilities.CreateTempDirectory();
             if (_addedPackages.Add(nupkgPath))
             {
-                _nugetAddCommand.AddPackageToSource(nupkgPath, _localFeedPath);
+                _nugetAddCommand.AddPackageToSource(nupkgPath, _localFeedPath, nugetCommandPath);
             }
         }
 

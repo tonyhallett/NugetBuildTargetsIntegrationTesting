@@ -14,7 +14,7 @@ namespace UnitTests
             var project = new XDocument();
             nugetTestSetup.Setup("path.nupkg", project);
 
-            mockNugetTempEnvironmentManager.Verify(nugetTempEnvironmentManager => nugetTempEnvironmentManager.Setup("path.nupkg", project, "$(BaseIntermediateOutputPath)\\packages"));
+            mockNugetTempEnvironmentManager.Verify(nugetTempEnvironmentManager => nugetTempEnvironmentManager.Setup("path.nupkg", project, "$(BaseIntermediateOutputPath)\\packages", null));
         }
 
         [Test]

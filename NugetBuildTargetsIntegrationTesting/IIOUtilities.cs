@@ -13,5 +13,7 @@ namespace NugetBuildTargetsIntegrationTesting
         string SaveXDocumentToDirectory(XDocument doc, string directory, string fileName);
         
         XDocument XDocParse(string text);
+
+        void AddRelativeFile(string directory, string relativePath, string contents);
     }
 }

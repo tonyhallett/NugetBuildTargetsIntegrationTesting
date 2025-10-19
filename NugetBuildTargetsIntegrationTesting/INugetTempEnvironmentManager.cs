@@ -4,7 +4,7 @@ namespace NugetBuildTargetsIntegrationTesting
 {
     public interface INugetTempEnvironmentManager
     {
-        void Setup(string nupkgPath, XDocument project, string restorePackagesPath);
+        void Setup(string nupkgPath, XDocument project, string restorePackagesPath, string? nugetCommandPath);
 
         void CleanUp();
     }
