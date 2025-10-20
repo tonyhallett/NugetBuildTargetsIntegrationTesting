@@ -5,7 +5,7 @@ namespace IntegrationTest
 {
     public class NugetBuildTargetsIntegrationTests
     {
-        private readonly NugetBuildTargetsTestSetup _testSetup = new();
+        private readonly NugetBuildTargetsTestSetupBuilder _testSetupBuilder = new();
         private string tempDir;
 
         [SetUp]
@@ -102,17 +102,21 @@ namespace IntegrationTest
 ";
 
             // Act: Call Setup
-            var buildOutput = _testSetup.Setup(dependentProjectContents, nupkgPath);
+            var buildResult = _testSetupBuilder
+                .CreateProject()
+                .AddProject(dependentProjectContents)
+                .AddNuPkg(nupkgPath)
+                .BuildWithDotNet();
 
             // Assert: Output contains custom message
-            StringAssert.Contains("Hello from CustomMessageTarget!", buildOutput);
+            StringAssert.Contains("Hello from CustomMessageTarget!", buildResult.Output);
         }
 
 
         [TearDown]
         public void TearDown()
         {
-            _testSetup.TearDown();
+            _testSetupBuilder.TearDown();
             Directory.Delete(tempDir, true);
         }
     }

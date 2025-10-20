@@ -1,6 +1,7 @@
 using System.Xml.Linq;
+using NugetBuildTargetsIntegrationTesting.Nuget;
 
-namespace NugetBuildTargetsIntegrationTesting
+namespace NugetBuildTargetsIntegrationTesting.MSBuildHelpers
 {
     internal class MsBuildProjectHelper : IMsBuildProjectHelper
     {

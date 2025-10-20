@@ -1,4 +1,4 @@
-namespace NugetBuildTargetsIntegrationTesting
+namespace NugetBuildTargetsIntegrationTesting.Nuget
 {
     public static class NuPkgHelper
     {

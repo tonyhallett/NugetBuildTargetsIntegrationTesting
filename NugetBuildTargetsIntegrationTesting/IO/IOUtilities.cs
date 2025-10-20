@@ -1,6 +1,6 @@
 using System.Xml.Linq;
 
-namespace NugetBuildTargetsIntegrationTesting
+namespace NugetBuildTargetsIntegrationTesting.IO
 {
     internal class IOUtilities : IIOUtilities
     {
@@ -47,8 +47,7 @@ namespace NugetBuildTargetsIntegrationTesting
             return path;
         }
 
-        public XDocument XDocParse(string text) 
-            => XDocument.Parse(text);
+        public XDocument XDocParse(string text) => XDocument.Parse(text);
 
         public void AddRelativeFile(string directory, string relativePath, string contents)
         {

@@ -1,4 +1,4 @@
-namespace NugetBuildTargetsIntegrationTesting
+namespace NugetBuildTargetsIntegrationTesting.Processing
 {
     internal static class ProcessHelper
     {

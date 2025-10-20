@@ -1,8 +1,8 @@
 using System.Xml.Linq;
 
-namespace NugetBuildTargetsIntegrationTesting
+namespace NugetBuildTargetsIntegrationTesting.Nuget
 {
-    public interface INugetTestSetup
+    internal interface INugetTestSetup
     {
         string? NugetCommandPath { get; set; }
 

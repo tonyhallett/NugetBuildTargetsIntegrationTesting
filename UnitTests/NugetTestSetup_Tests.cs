@@ -1,6 +1,7 @@
 using System.Xml.Linq;
 using Moq;
-using NugetBuildTargetsIntegrationTesting;
+using NugetBuildTargetsIntegrationTesting.MSBuildHelpers;
+using NugetBuildTargetsIntegrationTesting.Nuget;
 
 namespace UnitTests
 {

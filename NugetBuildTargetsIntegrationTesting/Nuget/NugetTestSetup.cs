@@ -1,6 +1,7 @@
 using System.Xml.Linq;
+using NugetBuildTargetsIntegrationTesting.MSBuildHelpers;
 
-namespace NugetBuildTargetsIntegrationTesting
+namespace NugetBuildTargetsIntegrationTesting.Nuget
 {
     internal class NugetTestSetup(IMsBuildProjectHelper msBuildProjectHelper, INugetTempEnvironmentManager nugetTempEnvironmentManager) : INugetTestSetup
     {

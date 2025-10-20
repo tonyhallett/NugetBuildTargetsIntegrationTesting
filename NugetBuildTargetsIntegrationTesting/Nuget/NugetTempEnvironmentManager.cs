@@ -1,8 +1,10 @@
 using System.Xml.Linq;
+using NugetBuildTargetsIntegrationTesting.IO;
+using NugetBuildTargetsIntegrationTesting.MSBuildHelpers;
 
-namespace NugetBuildTargetsIntegrationTesting
+namespace NugetBuildTargetsIntegrationTesting.Nuget
 {
-    public class NugetTempEnvironmentManager : INugetTempEnvironmentManager 
+    internal class NugetTempEnvironmentManager : INugetTempEnvironmentManager
     {
         private readonly IIOUtilities _ioUtilities;
         private readonly INugetAddCommand _nugetAddCommand;
@@ -10,19 +12,14 @@ namespace NugetBuildTargetsIntegrationTesting
         private string? _localFeedPath;
         private readonly HashSet<string> _addedPackages = [];
 
-        public NugetTempEnvironmentManager() 
-            : this(new NugetAddCommand())
-        {
-        }
-
-        public NugetTempEnvironmentManager(INugetAddCommand nugetAddCommand) :
-            this(IOUtilities.Instance, nugetAddCommand, MsBuildProjectHelper.Instance)
+        public NugetTempEnvironmentManager() :
+            this(IOUtilities.Instance, new NugetAddCommand(), MsBuildProjectHelper.Instance)
         {
         }
 
         internal NugetTempEnvironmentManager(
-            IIOUtilities ioUtilities, 
-            INugetAddCommand nugetAddCommand, 
+            IIOUtilities ioUtilities,
+            INugetAddCommand nugetAddCommand,
             IMsBuildProjectHelper msBuildProjectHelper)
         {
             _ioUtilities = ioUtilities;
@@ -49,14 +46,18 @@ namespace NugetBuildTargetsIntegrationTesting
             _localFeedPath ??= _ioUtilities.CreateTempDirectory();
             if (_addedPackages.Add(nupkgPath))
             {
-                _nugetAddCommand.AddPackageToSource(nupkgPath, _localFeedPath, nugetCommandPath);
+                Processing.ProcessResult processResult = _nugetAddCommand.AddPackageToSource(nupkgPath, _localFeedPath, nugetCommandPath);
+                if (processResult.ExitCode != 0)
+                {
+                    throw new NugetAddException(processResult.Error, processResult.Output, processResult.ExitCode);
+                }
             }
         }
 
         private void SetupTempPackageInstallPath(XElement propertyGroup, string packageInstallPath)
             => _msBuildProjectHelper.AddProperty(
-                propertyGroup, 
-                "RestorePackagesPath", 
+                propertyGroup,
+                "RestorePackagesPath",
                 packageInstallPath);
 
         public void CleanUp() => _ioUtilities.TryDeleteDirectoryRecursive(_localFeedPath);

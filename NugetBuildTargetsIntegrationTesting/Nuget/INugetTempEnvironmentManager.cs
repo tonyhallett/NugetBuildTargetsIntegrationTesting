@@ -1,8 +1,8 @@
 using System.Xml.Linq;
 
-namespace NugetBuildTargetsIntegrationTesting
+namespace NugetBuildTargetsIntegrationTesting.Nuget
 {
-    public interface INugetTempEnvironmentManager
+    internal interface INugetTempEnvironmentManager
     {
         void Setup(string nupkgPath, XDocument project, string restorePackagesPath, string? nugetCommandPath);
 

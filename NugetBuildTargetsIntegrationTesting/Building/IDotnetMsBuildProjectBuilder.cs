@@ -1,5 +1,6 @@
-﻿
-namespace NugetBuildTargetsIntegrationTesting
+﻿using NugetBuildTargetsIntegrationTesting.Processing;
+
+namespace NugetBuildTargetsIntegrationTesting.Building
 {
     interface IDotnetMsBuildProjectBuilder
     {

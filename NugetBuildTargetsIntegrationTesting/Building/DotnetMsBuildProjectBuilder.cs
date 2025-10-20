@@ -1,5 +1,6 @@
-﻿
-namespace NugetBuildTargetsIntegrationTesting
+﻿using NugetBuildTargetsIntegrationTesting.Processing;
+
+namespace NugetBuildTargetsIntegrationTesting.Building
 {
     internal class DotnetMsBuildProjectBuilder : IDotnetMsBuildProjectBuilder
     {
@@ -16,7 +17,7 @@ namespace NugetBuildTargetsIntegrationTesting
                 return DotNetBuild(projectFilePath, arguments, workingDirectory);
             }
 
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public ProcessResult DotNetBuild(string projectPath, string arguments, string workingDirectory)

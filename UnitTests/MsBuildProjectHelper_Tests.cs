@@ -1,5 +1,5 @@
 using System.Xml.Linq;
-using NugetBuildTargetsIntegrationTesting;
+using NugetBuildTargetsIntegrationTesting.MSBuildHelpers;
 
 namespace UnitTests
 {
