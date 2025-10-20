@@ -68,10 +68,14 @@ namespace UnitTests
         [Test]
         public void Should_Throw_NugetAddException_When_NugetAddCommand_ExitCode_Not_0()
         {
+            var failingProcessResult = new ProcessResult("output", "error", 1);
             _mockNugetAddCommand.Setup(nugetAddCommand => nugetAddCommand.AddPackageToSource("nupkgPath", "tempdir", null))
-                .Returns(new ProcessResult("output", "error", 1));
+                .Returns(failingProcessResult);
 
-            Assert.That(() => _nugetTempEnvironmentManager.Setup("nupkgPath", project, "packageInstallPath", null), Throws.InstanceOf<NugetAddException>());
+            var nugetAddException = Assert.Throws<NugetAddException>(() => _nugetTempEnvironmentManager.Setup("nupkgPath", project, "packageInstallPath", null));
+            Assert.That(nugetAddException.Error, Is.EqualTo(failingProcessResult.Error));
+            Assert.That(nugetAddException.Output, Is.EqualTo(failingProcessResult.Output));
+            Assert.That(nugetAddException.ExitCode, Is.EqualTo(failingProcessResult.ExitCode));
         }
 
         [Test]
