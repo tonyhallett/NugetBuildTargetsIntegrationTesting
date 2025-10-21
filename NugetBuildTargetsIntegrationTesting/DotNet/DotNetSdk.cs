@@ -4,11 +4,11 @@ namespace NugetBuildTargetsIntegrationTesting.DotNet
 {
     internal class DotNetSdk : IDotNetSdk
     {
-        private const string dotnetFileName = "dotnet";
+        public string DotNetFileName { get; set; } = "dotnet";
 
-        private static string? GetInstallDirectory(string sdkVersion)
+        private string? GetInstallDirectory(string sdkVersion)
         {
-            var result = ProcessHelper.StartAndWait(dotnetFileName, $"--list-sdks");
+            var result = ProcessHelper.StartAndWait(DotNetFileName, $"--list-sdks");
             if (result.ExitCode != 0)
             {
                 return null;
@@ -31,9 +31,9 @@ namespace NugetBuildTargetsIntegrationTesting.DotNet
             return null;
         }
 
-        private static string? GetVersion()
+        private string? GetVersion()
         {
-            var result = ProcessHelper.StartAndWait(dotnetFileName, "--version");
+            var result = ProcessHelper.StartAndWait(DotNetFileName, "--version");
             if (result.ExitCode != 0)
             {
                 return null;

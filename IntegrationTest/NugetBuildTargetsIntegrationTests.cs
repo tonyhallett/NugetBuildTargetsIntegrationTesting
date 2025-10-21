@@ -4,9 +4,12 @@ using NugetBuildTargetsIntegrationTesting.Builder;
 
 namespace IntegrationTest
 {
-    [TestFixture(true)]
-    [TestFixture(false)]
-    public class DependentProjectBuilderIntegrationTests(bool buildWithMSBuild)
+    [TestFixture(true, "DependentProject.csproj")]
+    [TestFixture(false, "DependentProject.csproj")]
+    [TestFixture(false, "./DependentProject.csproj")]
+    [TestFixture(false, ".\\DependentProject.csproj")]
+    [TestFixture(false, "sub dir/DependentProject.csproj")]
+    public class DependentProjectBuilderIntegrationTests(bool buildWithMSBuild, string projectFileRelativePath)
     {
         private readonly DependentProjectBuilder _dependentProjectBuilder = new();
         private string tempDir;
@@ -100,7 +103,7 @@ namespace IntegrationTest
 
             IProjectBuilder projectBuilder = _dependentProjectBuilder
                 .NewProject()
-                .AddProject(dependentProjectContents)
+                .AddProject(dependentProjectContents, projectFileRelativePath)
                 .AddNuPkg(nupkgPath);
             IBuildResult buildResult = buildWithMSBuild ? projectBuilder.BuildWithMSBuild() : projectBuilder.BuildWithDotNet();
 

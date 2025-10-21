@@ -26,7 +26,7 @@ namespace NugetBuildTargetsIntegrationTesting
                         MsBuildProjectHelper.Instance)
                 ),
                 new IOUtilities(),
-                new DotnetMsBuildProjectBuilder(MsBuildProjectHelper.Instance, new DotNetSdk()))
+                new DotnetMsBuildProjectBuilder())
         {
         }
 

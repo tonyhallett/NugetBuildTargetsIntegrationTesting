@@ -51,7 +51,7 @@ namespace UnitTests
         }
 
         [Test]
-        public void Should_Insert_MSBuild_Properties_RestoreSources_RestorePackagesPath_Ine_New_PropertyGroup()
+        public void Should_Insert_MSBuild_Properties_RestoreSources_RestorePackagesPath_In_New_PropertyGroup()
         {
             _mockNugetAddCommand.Setup(nugetAddCommand => nugetAddCommand.AddPackageToSource("nupkgPath", "tempdir", null))
                 .Returns(new ProcessResult("", "", 0));
@@ -61,7 +61,7 @@ namespace UnitTests
 
             _nugetTempEnvironmentManager.Setup("nupkgPath", project, "packageInstallPath", null);
             
-            _mockMsBuildProjectHelper.Verify(msBuildProjectHelper => msBuildProjectHelper.AddProperty(propertyGroup, "RestoreSources", "tempdir;"));
+            _mockMsBuildProjectHelper.Verify(msBuildProjectHelper => msBuildProjectHelper.AddProperty(propertyGroup, "RestoreSources", "tempdir;https://api.nuget.org/v3/index.json"));
             _mockMsBuildProjectHelper.Verify(msBuildProjectHelper => msBuildProjectHelper.AddProperty(propertyGroup, "RestorePackagesPath", "packageInstallPath"));
         }
 

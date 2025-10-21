@@ -1,64 +1,42 @@
-﻿using NugetBuildTargetsIntegrationTesting.DotNet;
-using NugetBuildTargetsIntegrationTesting.MSBuildHelpers;
-using NugetBuildTargetsIntegrationTesting.Processing;
+﻿using NugetBuildTargetsIntegrationTesting.Processing;
 
 namespace NugetBuildTargetsIntegrationTesting.Building
 {
-    internal class DotnetMsBuildProjectBuilder(IMsBuildProjectHelper msBuildProjectHelper, IDotNetSdk dotNetSdk) : IDotnetMsBuildProjectBuilder
+    internal class DotnetMsBuildProjectBuilder() : IDotnetMsBuildProjectBuilder
     {
         private const string defaultDotNetBuildArguments = "-c Release";
-        private readonly IMsBuildProjectHelper msBuildProjectHelper = msBuildProjectHelper;
-        private readonly IDotNetSdk dotNetSdk = dotNetSdk;
         private string dotnetFileName = "dotnet";
         private string msBuildFileName = "msbuild";
+        private string defaultMSBuildArguments = $"-restore -t:rebuild {CreateCommandLineProperty("Configuration", "Release")}";
 
         private static string CreateCommandLineProperty(string name, string value) => $"-property:{name}={value}";
 
-        private static string GetDefaultMSBuildArguments()
-        {
-            return $"-restore -t:rebuild {CreateCommandLineProperty("Configuration", "Release")}";
-        }
-
         public ProcessResult Build(string projectFilePath, bool isDotnet, string arguments, string workingDirectory)
         {
+            projectFilePath = QuotePath(projectFilePath);
             if (isDotnet)
             {
-                arguments = arguments == string.Empty ? defaultDotNetBuildArguments : arguments;
                 return DotNetBuild(projectFilePath, arguments, workingDirectory);
             }
 
             return MSBuildBuild(projectFilePath, arguments, workingDirectory);
         }
 
-        private ProcessResult MSBuildBuild(string projectFilePath, string arguments, string workingDirectory)
+        private ProcessResult MSBuildBuild(string quotedProjectFilePath, string arguments, string workingDirectory)
         {
-            if (arguments == string.Empty)
-            {
-                arguments = GetDefaultMSBuildArguments();
-                var isSDKStyle = msBuildProjectHelper.IsSDKStyleProject(projectFilePath);
-                if (isSDKStyle)
-                {
-                    var msBuildSDKsPath = dotNetSdk.GetActiveSdkSdksPath();
-                    if (msBuildSDKsPath == null)
-                    {
-                        return new ProcessResult("", "Cannot find dotnet sdk path", 1);
-                    }
-                    
-                    arguments = $"{CreateCommandLineProperty("MSBuildSDKsPath", QuotePath(msBuildSDKsPath))} {arguments}";
-                }
-            }
-            arguments = $"{QuotePath(projectFilePath)} {arguments}";
-            return ProcessHelper.StartAndWait(msBuildFileName, arguments, workingDirectory);
+            arguments = arguments == string.Empty ? defaultMSBuildArguments : arguments;
+            return ProcessHelper.StartAndWait(
+                msBuildFileName, 
+                $"{QuotePath(quotedProjectFilePath)} {arguments}", 
+                workingDirectory);
         }
 
         private static string QuotePath(string path) => $"\"{path}\"";
 
-        private ProcessResult DotNetBuild(string projectFilePath, string arguments, string workingDirectory)
-            => DotNetCommand("build", projectFilePath, workingDirectory, arguments);
-
-        private ProcessResult DotNetCommand(string command, string projectFilePath, string workingDirectory, string additionalArguments = "")
+        private ProcessResult DotNetBuild(string quotedProjectFilePath, string arguments, string workingDirectory)
         {
-            var arguments = $"{command} \"{projectFilePath}\" {additionalArguments}";
+            arguments = arguments == string.Empty ? defaultDotNetBuildArguments : arguments;
+            arguments = $"build {quotedProjectFilePath} {arguments}";
             return ProcessHelper.StartAndWait(dotnetFileName, arguments, workingDirectory);
         }
 
