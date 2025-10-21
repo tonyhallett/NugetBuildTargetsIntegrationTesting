@@ -38,7 +38,15 @@ namespace NugetBuildTargetsIntegrationTesting.Nuget
         private void SetUpForTempSource(string nupkgPath, XElement propertyGroup, string? nugetCommandPath)
         {
             AddPackageToTempSource(nupkgPath, nugetCommandPath);
-            _msBuildProjectHelper.AddProperty(propertyGroup, "RestoreSources", $"{_localFeedPath!};");
+            /* 
+                https://api.nuget.org/v3/index.json required for MSBuild Microsoft.Net.Sdk.Compilers.Toolset
+
+                https://www.nuget.org/packages/Microsoft.Net.Sdk.Compilers.Toolset
+                This package is automatically downloaded when your MSBuild version does not match your SDK version.
+                Then the package is used to build your project with the compiler version matching your SDK version
+                instead of the one bundled with MSBuild.
+             */
+            _msBuildProjectHelper.AddProperty(propertyGroup, "RestoreSources", $"{_localFeedPath!};https://api.nuget.org/v3/index.json");
         }
 
         private void AddPackageToTempSource(string nupkgPath, string? nugetCommandPath)

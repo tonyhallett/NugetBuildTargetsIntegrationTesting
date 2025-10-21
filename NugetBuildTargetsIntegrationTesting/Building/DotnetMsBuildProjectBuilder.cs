@@ -1,13 +1,23 @@
-﻿using NugetBuildTargetsIntegrationTesting.Processing;
+﻿using NugetBuildTargetsIntegrationTesting.DotNet;
+using NugetBuildTargetsIntegrationTesting.MSBuildHelpers;
+using NugetBuildTargetsIntegrationTesting.Processing;
 
 namespace NugetBuildTargetsIntegrationTesting.Building
 {
-    internal class DotnetMsBuildProjectBuilder : IDotnetMsBuildProjectBuilder
+    internal class DotnetMsBuildProjectBuilder(IMsBuildProjectHelper msBuildProjectHelper, IDotNetSdk dotNetSdk) : IDotnetMsBuildProjectBuilder
     {
         private const string defaultDotNetBuildArguments = "-c Release";
-
+        private readonly IMsBuildProjectHelper msBuildProjectHelper = msBuildProjectHelper;
+        private readonly IDotNetSdk dotNetSdk = dotNetSdk;
         private string dotnetFileName = "dotnet";
         private string msBuildFileName = "msbuild";
+
+        private static string CreateCommandLineProperty(string name, string value) => $"-property:{name}={value}";
+
+        private static string GetDefaultMSBuildArguments()
+        {
+            return $"-restore -t:rebuild {CreateCommandLineProperty("Configuration", "Release")}";
+        }
 
         public ProcessResult Build(string projectFilePath, bool isDotnet, string arguments, string workingDirectory)
         {
@@ -17,15 +27,38 @@ namespace NugetBuildTargetsIntegrationTesting.Building
                 return DotNetBuild(projectFilePath, arguments, workingDirectory);
             }
 
-            throw new NotImplementedException();
+            return MSBuildBuild(projectFilePath, arguments, workingDirectory);
         }
 
-        public ProcessResult DotNetBuild(string projectPath, string arguments, string workingDirectory)
-            => DotNetCommand("build", projectPath, workingDirectory, arguments);
-
-        private ProcessResult DotNetCommand(string command, string projectPath, string workingDirectory, string additionalArguments = "")
+        private ProcessResult MSBuildBuild(string projectFilePath, string arguments, string workingDirectory)
         {
-            var arguments = $"{command} \"{projectPath}\" {additionalArguments}";
+            if (arguments == string.Empty)
+            {
+                arguments = GetDefaultMSBuildArguments();
+                var isSDKStyle = msBuildProjectHelper.IsSDKStyleProject(projectFilePath);
+                if (isSDKStyle)
+                {
+                    var msBuildSDKsPath = dotNetSdk.GetActiveSdkSdksPath();
+                    if (msBuildSDKsPath == null)
+                    {
+                        return new ProcessResult("", "Cannot find dotnet sdk path", 1);
+                    }
+                    
+                    arguments = $"{CreateCommandLineProperty("MSBuildSDKsPath", QuotePath(msBuildSDKsPath))} {arguments}";
+                }
+            }
+            arguments = $"{QuotePath(projectFilePath)} {arguments}";
+            return ProcessHelper.StartAndWait(msBuildFileName, arguments, workingDirectory);
+        }
+
+        private static string QuotePath(string path) => $"\"{path}\"";
+
+        private ProcessResult DotNetBuild(string projectFilePath, string arguments, string workingDirectory)
+            => DotNetCommand("build", projectFilePath, workingDirectory, arguments);
+
+        private ProcessResult DotNetCommand(string command, string projectFilePath, string workingDirectory, string additionalArguments = "")
+        {
+            var arguments = $"{command} \"{projectFilePath}\" {additionalArguments}";
             return ProcessHelper.StartAndWait(dotnetFileName, arguments, workingDirectory);
         }
 

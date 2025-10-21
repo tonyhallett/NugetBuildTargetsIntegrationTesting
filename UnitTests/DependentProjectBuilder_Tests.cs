@@ -9,12 +9,12 @@ using NugetBuildTargetsIntegrationTesting.Processing;
 
 namespace UnitTests
 {
-    internal class NugetBuildTargetsTestSetupBuilder_Tests
+    internal class DependentProjectBuilder_Tests
     {
         private Mock<INugetTestSetup> _mockNugetTestSetup;
         private Mock<IIOUtilities> _mockIOUtiities;
         private Mock<IDotnetMsBuildProjectBuilder> _mockDotNetMsBuildProjectBuilder;
-        private NugetBuildTargetsTestSetupBuilder _nugetBuildTargetsTestSetupBuilder;
+        private DependentProjectBuilder _nugetBuildTargetsTestSetupBuilder;
         private const string projectContainingDir = "projectcontainingdir";
         private const string nuPkgPath = "package.nupkg";
         private const string projectContent = "<Project></Project>";
@@ -37,7 +37,7 @@ namespace UnitTests
             _mockIOUtiities.Setup(mock => mock.CreateUniqueSubdirectory("rootdir")).Returns(projectContainingDir);
             _mockIOUtiities.Setup(mock => mock.XDocParse(projectContent)).Returns(_projectXDoc);
             _mockDotNetMsBuildProjectBuilder = new Mock<IDotnetMsBuildProjectBuilder>();
-            _nugetBuildTargetsTestSetupBuilder = new NugetBuildTargetsTestSetupBuilder(
+            _nugetBuildTargetsTestSetupBuilder = new DependentProjectBuilder(
                _commandPaths,
                _mockNugetTestSetup.Object,
                _mockIOUtiities.Object,
@@ -62,7 +62,7 @@ namespace UnitTests
             bool dotNetBuild = true
             )
         {
-            var project = _nugetBuildTargetsTestSetupBuilder.CreateProject();
+            var project = _nugetBuildTargetsTestSetupBuilder.NewProject();
             if (files != null)
             {
                 project = project.AddFiles(files);

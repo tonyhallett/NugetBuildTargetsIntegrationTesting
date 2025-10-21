@@ -9,5 +9,7 @@ namespace NugetBuildTargetsIntegrationTesting.MSBuildHelpers
         XElement InsertPropertyGroup(XDocument project);
 
         void AddProperty(XElement propertyGroup, string name, string value);
+
+        bool IsSDKStyleProject(string projectFilePath);
     }
 }

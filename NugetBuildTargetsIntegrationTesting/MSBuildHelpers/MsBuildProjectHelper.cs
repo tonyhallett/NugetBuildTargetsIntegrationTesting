@@ -30,5 +30,13 @@ namespace NugetBuildTargetsIntegrationTesting.MSBuildHelpers
         {
             propertyGroup.Add(new XElement(name, value));
         }
+
+        public bool IsSDKStyleProject(string projectFilePath)
+        {
+            var projectDocument = XDocument.Load(projectFilePath);
+            return projectDocument.Root!.Attribute("Sdk") != null ||
+                  projectDocument.Descendants("Import")
+                        .Any(e => (string?)e.Attribute("Project") is string p && p.Contains("Sdk.props"));
+        }
     }
 }

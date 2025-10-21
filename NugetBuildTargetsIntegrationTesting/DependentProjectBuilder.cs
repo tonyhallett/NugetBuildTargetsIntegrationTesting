@@ -1,5 +1,6 @@
 ﻿using NugetBuildTargetsIntegrationTesting.Builder;
 using NugetBuildTargetsIntegrationTesting.Building;
+using NugetBuildTargetsIntegrationTesting.DotNet;
 using NugetBuildTargetsIntegrationTesting.IO;
 using NugetBuildTargetsIntegrationTesting.MSBuildHelpers;
 using NugetBuildTargetsIntegrationTesting.Nuget;
@@ -7,19 +8,14 @@ using NugetBuildTargetsIntegrationTesting.Processing;
 
 namespace NugetBuildTargetsIntegrationTesting
 {
-    public class NugetBuildTargetsTestSetupBuilder : IBuildManager
+    public class DependentProjectBuilder : IBuildManager
     {
         private readonly INugetTestSetup _nugetTestSetup;
         private readonly IIOUtilities _ioUtilities;
         private readonly IDotnetMsBuildProjectBuilder projectBuilder;
         private string? _tempDependentProjectsDirectory;
 
-        public NugetBuildTargetsTestSetupBuilder()
-            : this(null)
-        {
-        }
-
-        public NugetBuildTargetsTestSetupBuilder(CommandPaths? commandPaths)
+        public DependentProjectBuilder(CommandPaths? commandPaths = null)
             : this(
                 commandPaths,
                 new NugetTestSetup(
@@ -30,11 +26,11 @@ namespace NugetBuildTargetsIntegrationTesting
                         MsBuildProjectHelper.Instance)
                 ),
                 new IOUtilities(),
-                new DotnetMsBuildProjectBuilder())
+                new DotnetMsBuildProjectBuilder(MsBuildProjectHelper.Instance, new DotNetSdk()))
         {
         }
 
-        internal NugetBuildTargetsTestSetupBuilder(
+        internal DependentProjectBuilder(
             CommandPaths? commandPaths,
             INugetTestSetup nugetTestSetup,
             IIOUtilities ioUtilities,
@@ -57,7 +53,7 @@ namespace NugetBuildTargetsIntegrationTesting
             return _ioUtilities.CreateUniqueSubdirectory(_tempDependentProjectsDirectory);
         }
 
-        public IProject CreateProject() => new Project(this);
+        public IProject NewProject() => new Project(this);
 
         BuildResult IBuildManager.Build(ProjectBuildContext projectContext, bool isDotnet, string arguments)
         {

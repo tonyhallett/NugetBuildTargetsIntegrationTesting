@@ -1,18 +1,18 @@
 using System.Diagnostics;
 using NugetBuildTargetsIntegrationTesting;
+using NugetBuildTargetsIntegrationTesting.Builder;
 
 namespace IntegrationTest
 {
-    public class NugetBuildTargetsIntegrationTests
+    [TestFixture(true)]
+    [TestFixture(false)]
+    public class DependentProjectBuilderIntegrationTests(bool buildWithMSBuild)
     {
-        private readonly NugetBuildTargetsTestSetupBuilder _testSetupBuilder = new();
+        private readonly DependentProjectBuilder _dependentProjectBuilder = new();
         private string tempDir;
 
         [SetUp]
-        public void SetUp()
-        {
-            tempDir = Directory.CreateTempSubdirectory().FullName;
-        }
+        public void SetUp() => tempDir = Directory.CreateTempSubdirectory().FullName;
 
         private static void RunCommand(string command, string args, string workingDir)
         {
@@ -73,15 +73,13 @@ namespace IntegrationTest
         private string Pack(string nuspecPath)
         {
             var nupkgPath = Path.Combine(tempDir, "CustomBuildTarget.1.0.0.nupkg");
-            //var nugetExe = "nuget";
             var packArgs = $"pack \"{nuspecPath}\" -OutputDirectory \"{tempDir}\"";
-            //var packProcess = System.Diagnostics.Process.Start(nugetExe, packArgs);
-            //packProcess.WaitForExit();
             RunCommand("nuget", packArgs, tempDir);
             if (!File.Exists(nupkgPath))
             {
                 throw new Exception("pack failed");
             }
+
             return nupkgPath;
         }
 
@@ -89,26 +87,23 @@ namespace IntegrationTest
         public void Setup_ShouldInjectCustomBuildTargetAndOutputMessage()
         {
             WriteTargetsToBuildDirectory();
-            var nuspecPath = WriteNuspec();
-            var nupkgPath = Pack(nuspecPath);
+            string nuspecPath = WriteNuspec();
+            string nupkgPath = Pack(nuspecPath);
 
-            // Create dependent project contents
-            var dependentProjectContents = @"
-<Project Sdk=""Microsoft.NET.Sdk"">
+            string dependentProjectContents = 
+@"<Project Sdk=""Microsoft.NET.Sdk"">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 </Project>
 ";
 
-            // Act: Call Setup
-            var buildResult = _testSetupBuilder
-                .CreateProject()
+            IProjectBuilder projectBuilder = _dependentProjectBuilder
+                .NewProject()
                 .AddProject(dependentProjectContents)
-                .AddNuPkg(nupkgPath)
-                .BuildWithDotNet();
+                .AddNuPkg(nupkgPath);
+            IBuildResult buildResult = buildWithMSBuild ? projectBuilder.BuildWithMSBuild() : projectBuilder.BuildWithDotNet();
 
-            // Assert: Output contains custom message
             StringAssert.Contains("Hello from CustomMessageTarget!", buildResult.Output);
         }
 
@@ -116,7 +111,7 @@ namespace IntegrationTest
         [TearDown]
         public void TearDown()
         {
-            _testSetupBuilder.TearDown();
+            _dependentProjectBuilder.TearDown();
             Directory.Delete(tempDir, true);
         }
     }
