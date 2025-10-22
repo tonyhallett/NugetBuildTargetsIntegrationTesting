@@ -4,6 +4,10 @@ using NugetBuildTargetsIntegrationTesting.MSBuildHelpers;
 
 namespace NugetBuildTargetsIntegrationTesting.Nuget
 {
+    /*
+        see https://github.com/NuGet/Home/wiki/%5BSpec%5D-NuGet-settings-in-MSBuild for
+        RestorePackagesPath and RestoreSources
+    */
     internal sealed class NugetTempEnvironmentManager : INugetTempEnvironmentManager
     {
         private const string NuGetApiSource = "https://api.nuget.org/v3/index.json";
