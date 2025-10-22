@@ -1,13 +1,16 @@
 namespace NugetBuildTargetsIntegrationTesting.Nuget
 {
-    public class NugetAddException(string error, string output, int exitCode) : Exception(GetMessage(error, output, exitCode))
+#pragma warning disable RCS1194 // Implement exception constructors
+    public class NugetAddException(string standardError, string standardOutput, int exitCode)
+#pragma warning restore RCS1194 // Implement exception constructors
+        : Exception(GetMessage(standardError, standardOutput, exitCode))
     {
         private static string GetMessage(string error, string output, int exitCode)
             => $"ExitCode {exitCode}. {error} {Environment.NewLine} {output} ";
 
-        public string Error { get; } = error;
+        public string StandardError { get; } = standardError;
 
-        public string Output { get; } = output;
+        public string StandardOutput { get; } = standardOutput;
 
         public int ExitCode { get; } = exitCode;
     }

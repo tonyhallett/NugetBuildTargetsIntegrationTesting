@@ -5,7 +5,7 @@ using NugetBuildTargetsIntegrationTesting.Nuget;
 
 namespace UnitTests
 {
-    public class NugetTestSetup_Tests
+    internal sealed class NugetTestSetup_Tests
     {
         [Test]
         public void Should_Setup_The_Nuget_Temp_Environment_To_Install_Packages_Withing_Project_Output()

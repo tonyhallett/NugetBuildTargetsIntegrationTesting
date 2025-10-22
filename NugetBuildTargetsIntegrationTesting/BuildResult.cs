@@ -2,13 +2,12 @@
 
 namespace NugetBuildTargetsIntegrationTesting
 {
-    internal class BuildResult(
+    internal sealed class BuildResult(
             DirectoryInfo projectDirectory,
             DirectoryInfo containingDirectory,
             ProcessResult processResult,
             Action<IEnumerable<(string Contents, string RelativePath)>> addFiles,
-            Func<string?,ProcessResult> rebuild
-            ) : IBuildResult
+            Func<string?, ProcessResult> rebuild) : IBuildResult
     {
         public DirectoryInfo ProjectDirectory { get; } = projectDirectory;
 
@@ -18,11 +17,11 @@ namespace NugetBuildTargetsIntegrationTesting
 
         public bool Passed => ProcessResult.ExitCode == 0;
 
-        public string Output => ProcessResult.Output;
+        public string StandardOutput => ProcessResult.StandardOutput;
 
-        public string Error => ProcessResult.Error;
+        public string StandardError => ProcessResult.StandardError;
 
-        public string ErrorAndOutput => Error + Environment.NewLine + Output;
+        public string ErrorAndOutput => StandardError + Environment.NewLine + StandardOutput;
 
         public IBuildResult AddFiles(IEnumerable<(string Contents, string RelativePath)> files)
         {
@@ -30,10 +29,6 @@ namespace NugetBuildTargetsIntegrationTesting
             return this;
         }
 
-        public void Rebuild(string? args = null)
-        {
-            ProcessResult = rebuild(args);
-        }
-
+        public void Rebuild(string? args = null) => ProcessResult = rebuild(args);
     }
 }

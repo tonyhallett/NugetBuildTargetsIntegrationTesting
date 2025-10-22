@@ -1,21 +1,22 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Xml.Linq;
 using NugetBuildTargetsIntegrationTesting.Nuget;
 
 namespace NugetBuildTargetsIntegrationTesting.MSBuildHelpers
 {
-    internal class MsBuildProjectHelper : IMsBuildProjectHelper
+    internal sealed class MsBuildProjectHelper : IMsBuildProjectHelper
     {
-        public static readonly MsBuildProjectHelper Instance = new MsBuildProjectHelper();
+        public static readonly MsBuildProjectHelper Instance = new();
 
         public void AddPackageReference(XDocument project, string nupkgPath)
         {
-            var (packageId, version) = NuPkgHelper.GetPackageIdAndVersionFromNupkgPath(nupkgPath);
-            var itemGroup = new XElement("ItemGroup",
-                new XElement("PackageReference",
+            (string packageId, string version) = NuPkgHelper.GetPackageIdAndVersionFromNupkgPath(nupkgPath);
+            var itemGroup = new XElement(
+                "ItemGroup",
+                new XElement(
+                    "PackageReference",
                     new XAttribute("Include", packageId),
-                    new XAttribute("Version", version)
-                )
-            );
+                    new XAttribute("Version", version)));
             project.Root!.Add(itemGroup);
         }
 
@@ -27,10 +28,9 @@ namespace NugetBuildTargetsIntegrationTesting.MSBuildHelpers
         }
 
         public void AddProperty(XElement propertyGroup, string name, string value)
-        {
-            propertyGroup.Add(new XElement(name, value));
-        }
+            => propertyGroup.Add(new XElement(name, value));
 
+        [ExcludeFromCodeCoverage]
         public bool IsSDKStyleProject(string projectFilePath)
         {
             var projectDocument = XDocument.Load(projectFilePath);

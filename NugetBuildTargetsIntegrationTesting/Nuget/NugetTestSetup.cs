@@ -3,7 +3,7 @@ using NugetBuildTargetsIntegrationTesting.MSBuildHelpers;
 
 namespace NugetBuildTargetsIntegrationTesting.Nuget
 {
-    internal class NugetTestSetup(IMsBuildProjectHelper msBuildProjectHelper, INugetTempEnvironmentManager nugetTempEnvironmentManager) : INugetTestSetup
+    internal sealed class NugetTestSetup(IMsBuildProjectHelper msBuildProjectHelper, INugetTempEnvironmentManager nugetTempEnvironmentManager) : INugetTestSetup
     {
         public string? NugetCommandPath { get; set; }
 

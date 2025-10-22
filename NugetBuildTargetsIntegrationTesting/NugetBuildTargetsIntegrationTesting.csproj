@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
     <PropertyGroup>
+        <Version>2.0.0</Version>
         <Authors>TonyHUk</Authors>
         <Description>Integration testing utility for .nupkg providing build targets.</Description>
         <Copyright>Copyright © 2025 Tony Hallett</Copyright>

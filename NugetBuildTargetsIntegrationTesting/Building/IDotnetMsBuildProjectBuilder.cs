@@ -2,7 +2,7 @@
 
 namespace NugetBuildTargetsIntegrationTesting.Building
 {
-    interface IDotnetMsBuildProjectBuilder
+    internal interface IDotnetMsBuildProjectBuilder
     {
         ProcessResult Build(string projectFilePath, bool isDotnet, string arguments, string workingDirectory);
 

@@ -4,12 +4,12 @@ namespace NugetBuildTargetsIntegrationTesting.Nuget
     {
         public static (string PackageId, string Version) GetPackageIdAndVersionFromNupkgPath(string nupkgPath)
         {
-            var fileName = Path.GetFileNameWithoutExtension(nupkgPath);
+            string fileName = Path.GetFileNameWithoutExtension(nupkgPath);
             var packageNameParts = new List<string>();
             var versionParts = new List<string>();
-            var foundMajor = false;
-            var parts = fileName.Split('.');
-            foreach (var part in parts)
+            bool foundMajor = false;
+            string[] parts = fileName.Split('.');
+            foreach (string part in parts)
             {
                 if (foundMajor)
                 {
@@ -29,8 +29,8 @@ namespace NugetBuildTargetsIntegrationTesting.Nuget
                 }
             }
 
-            var packageId = string.Join(".", [.. packageNameParts]);
-            var version = string.Join(".", [.. versionParts]);
+            string packageId = string.Join(".", [.. packageNameParts]);
+            string version = string.Join(".", [.. versionParts]);
             return (packageId, version);
         }
     }

@@ -1,10 +1,10 @@
 ﻿namespace NugetBuildTargetsIntegrationTesting.Builder
 {
-    internal class ProjectBuildContext(
+    internal sealed class ProjectBuildContext(
         string projectContents,
         string projectRelativePath,
         string nuPkgPath,
-        IEnumerable<(string Contents, string RelativePath)>? _files)
+        IEnumerable<(string Contents, string RelativePath)>? files)
     {
         public string ProjectContents { get; } = projectContents;
 
@@ -12,6 +12,6 @@
 
         public string NuPkgPath { get; } = nuPkgPath;
 
-        public IEnumerable<(string Contents, string RelativePath)>? Files { get; } = _files;
+        public IEnumerable<(string Contents, string RelativePath)>? Files { get; } = files;
     }
 }

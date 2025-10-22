@@ -1,55 +1,50 @@
-﻿using NugetBuildTargetsIntegrationTesting.Processing;
+﻿using System.Diagnostics.CodeAnalysis;
+using NugetBuildTargetsIntegrationTesting.Processing;
 
 namespace NugetBuildTargetsIntegrationTesting.DotNet
 {
-    internal class DotNetSdk : IDotNetSdk
+    [ExcludeFromCodeCoverage]
+    internal sealed class DotNetSdk : IDotNetSdk
     {
         public string DotNetFileName { get; set; } = "dotnet";
 
         private string? GetInstallDirectory(string sdkVersion)
         {
-            var result = ProcessHelper.StartAndWait(DotNetFileName, $"--list-sdks");
+            ProcessResult result = ProcessHelper.StartAndWait(DotNetFileName, "--list-sdks");
             if (result.ExitCode != 0)
             {
                 return null;
             }
-            var lines = result.Output.Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
-            foreach (var line in lines)
+
+            string[] lines = result.StandardOutput.Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
+            foreach (string line in lines)
             {
-                var openingBracketIndex = line.IndexOf('[');
+                int openingBracketIndex = line.IndexOf('[');
                 if (openingBracketIndex != -1)
                 {
-                    var version = line.Substring(0, openingBracketIndex).Trim();
+                    string version = line[..openingBracketIndex].Trim();
                     if (version == sdkVersion)
                     {
-                        var path = line.Substring(openingBracketIndex).Trim('[', ']');
-                        var sdkPath = Path.Combine(path, version);
+                        string path = line[openingBracketIndex..].Trim('[', ']');
+                        string sdkPath = Path.Combine(path, version);
                         return sdkPath;
                     }
                 }
             }
+
             return null;
         }
 
         private string? GetVersion()
         {
-            var result = ProcessHelper.StartAndWait(DotNetFileName, "--version");
-            if (result.ExitCode != 0)
-            {
-                return null;
-            }
-            return result.Output.Trim();
+            ProcessResult result = ProcessHelper.StartAndWait(DotNetFileName, "--version");
+            return result.ExitCode != 0 ? null : result.StandardOutput.Trim();
         }
 
         public string? GetActiveSdkSdksPath()
         {
-            var version = GetVersion();
-            if (version == null)
-            {
-                return null;
-            }
-
-            return GetInstallDirectory(version);
+            string? version = GetVersion();
+            return version == null ? null : GetInstallDirectory(version);
         }
     }
 }

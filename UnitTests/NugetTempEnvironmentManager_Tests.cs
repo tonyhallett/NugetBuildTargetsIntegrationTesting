@@ -7,32 +7,39 @@ using NugetBuildTargetsIntegrationTesting.Processing;
 
 namespace UnitTests
 {
-    public class NugetTempEnvironmentManager_Tests
+    internal sealed class NugetTempEnvironmentManager_Tests
     {
-        private Mock<IIOUtilities> _mockIOUtilities;
-        private Mock<INugetAddCommand> _mockNugetAddCommand;
-        private Mock<IMsBuildProjectHelper> _mockMsBuildProjectHelper;
-        private NugetTempEnvironmentManager _nugetTempEnvironmentManager;
-        private readonly XDocument project = new XDocument();
+        private readonly XDocument _project = new();
+        private Mock<IIOUtilities> _mockIOUtilities = new();
+        private Mock<INugetAddCommand> _mockNugetAddCommand = new();
+        private Mock<IMsBuildProjectHelper> _mockMsBuildProjectHelper = new();
+        private NugetTempEnvironmentManager? _nugetTempEnvironmentManager;
 
         [SetUp]
         public void SetUp()
         {
             _mockIOUtilities = new Mock<IIOUtilities>();
-            _mockIOUtilities.Setup(ioUtilities => ioUtilities.CreateTempDirectory()).Returns("tempdir");
+            _ = _mockIOUtilities.Setup(ioUtilities => ioUtilities.CreateTempDirectory()).Returns("tempdir");
             _mockNugetAddCommand = new Mock<INugetAddCommand>();
             _mockMsBuildProjectHelper = new Mock<IMsBuildProjectHelper>();
-            _nugetTempEnvironmentManager = new NugetTempEnvironmentManager(_mockIOUtilities.Object, _mockNugetAddCommand.Object, _mockMsBuildProjectHelper.Object);
+            var mockNuGetGlobalPackagesPathProvider = new Mock<INuGetGlobalPackagesPathProvider>();
+            _ = mockNuGetGlobalPackagesPathProvider.Setup(nugetGlobalPackagesPathProvider => nugetGlobalPackagesPathProvider.Provide())
+                .Returns("global");
+            _nugetTempEnvironmentManager = new NugetTempEnvironmentManager(
+                _mockIOUtilities.Object,
+                _mockNugetAddCommand.Object,
+                _mockMsBuildProjectHelper.Object,
+                mockNuGetGlobalPackagesPathProvider.Object
+                );
         }
-
 
         [Test]
         public void Should_Add_The_Package_To_Temp_Nuget_Source()
         {
-            _mockNugetAddCommand.Setup(nugetAddCommand => nugetAddCommand.AddPackageToSource("nupkgPath", "tempdir", "addcommandpath"))
-                .Returns(new ProcessResult("", "", 0));
+            _ = _mockNugetAddCommand.Setup(nugetAddCommand => nugetAddCommand.AddPackageToSource("nupkgPath", "tempdir", "addcommandpath"))
+                .Returns(new ProcessResult(string.Empty, string.Empty, 0));
 
-            _nugetTempEnvironmentManager.Setup("nupkgPath", project, "packageInstallPath", "addcommandpath");
+            _nugetTempEnvironmentManager!.Setup("nupkgPath", _project, "packageInstallPath", "addcommandpath");
 
             _mockNugetAddCommand.VerifyAll();
         }
@@ -40,11 +47,11 @@ namespace UnitTests
         [Test]
         public void Should_Add_The_Package_To_Temp_Nuget_Source_Only_Once()
         {
-            _mockNugetAddCommand.Setup(nugetAddCommand => nugetAddCommand.AddPackageToSource("nupkgPath", "tempdir", null))
-                .Returns(new ProcessResult("", "", 0));
+            _ = _mockNugetAddCommand.Setup(nugetAddCommand => nugetAddCommand.AddPackageToSource("nupkgPath", "tempdir", null))
+                .Returns(new ProcessResult(string.Empty, string.Empty, 0));
 
-            _nugetTempEnvironmentManager.Setup("nupkgPath", project, "packageInstallPath", null);
-            _nugetTempEnvironmentManager.Setup("nupkgPath", project, "packageInstallPath", null);
+            _nugetTempEnvironmentManager!.Setup("nupkgPath", _project, "packageInstallPath", null);
+            _nugetTempEnvironmentManager!.Setup("nupkgPath", _project, "packageInstallPath", null);
 
             _mockIOUtilities.Verify(ioUtilities => ioUtilities.CreateTempDirectory(), Times.Once);
             _mockNugetAddCommand.Verify(nugetAddCommand => nugetAddCommand.AddPackageToSource("nupkgPath", "tempdir", null), Times.Once);
@@ -53,15 +60,16 @@ namespace UnitTests
         [Test]
         public void Should_Insert_MSBuild_Properties_RestoreSources_RestorePackagesPath_In_New_PropertyGroup()
         {
-            _mockNugetAddCommand.Setup(nugetAddCommand => nugetAddCommand.AddPackageToSource("nupkgPath", "tempdir", null))
-                .Returns(new ProcessResult("", "", 0));
+            _ = _mockNugetAddCommand.Setup(nugetAddCommand => nugetAddCommand.AddPackageToSource("nupkgPath", "tempdir", null))
+                .Returns(new ProcessResult(string.Empty, string.Empty, 0));
 
             var propertyGroup = new XElement("PropertyGroup");
-            _mockMsBuildProjectHelper.Setup(msBuildProjectHelper => msBuildProjectHelper.InsertPropertyGroup(project)).Returns(propertyGroup);
+            _ = _mockMsBuildProjectHelper.Setup(msBuildProjectHelper => msBuildProjectHelper.InsertPropertyGroup(_project))
+                .Returns(propertyGroup);
 
-            _nugetTempEnvironmentManager.Setup("nupkgPath", project, "packageInstallPath", null);
-            
-            _mockMsBuildProjectHelper.Verify(msBuildProjectHelper => msBuildProjectHelper.AddProperty(propertyGroup, "RestoreSources", "tempdir;https://api.nuget.org/v3/index.json"));
+            _nugetTempEnvironmentManager!.Setup("nupkgPath", _project, "packageInstallPath", null);
+
+            _mockMsBuildProjectHelper.Verify(msBuildProjectHelper => msBuildProjectHelper.AddProperty(propertyGroup, "RestoreSources", "tempdir;global;https://api.nuget.org/v3/index.json"));
             _mockMsBuildProjectHelper.Verify(msBuildProjectHelper => msBuildProjectHelper.AddProperty(propertyGroup, "RestorePackagesPath", "packageInstallPath"));
         }
 
@@ -69,21 +77,24 @@ namespace UnitTests
         public void Should_Throw_NugetAddException_When_NugetAddCommand_ExitCode_Not_0()
         {
             var failingProcessResult = new ProcessResult("output", "error", 1);
-            _mockNugetAddCommand.Setup(nugetAddCommand => nugetAddCommand.AddPackageToSource("nupkgPath", "tempdir", null))
+            _ = _mockNugetAddCommand.Setup(nugetAddCommand => nugetAddCommand.AddPackageToSource("nupkgPath", "tempdir", null))
                 .Returns(failingProcessResult);
 
-            var nugetAddException = Assert.Throws<NugetAddException>(() => _nugetTempEnvironmentManager.Setup("nupkgPath", project, "packageInstallPath", null));
-            Assert.That(nugetAddException.Error, Is.EqualTo(failingProcessResult.Error));
-            Assert.That(nugetAddException.Output, Is.EqualTo(failingProcessResult.Output));
-            Assert.That(nugetAddException.ExitCode, Is.EqualTo(failingProcessResult.ExitCode));
+            NugetAddException? nugetAddException = Assert.Throws<NugetAddException>(() => _nugetTempEnvironmentManager!.Setup("nupkgPath", _project, "packageInstallPath", null));
+            Assert.Multiple(() =>
+            {
+                Assert.That(nugetAddException!.StandardError, Is.EqualTo(failingProcessResult.StandardError));
+                Assert.That(nugetAddException!.StandardOutput, Is.EqualTo(failingProcessResult.StandardOutput));
+                Assert.That(nugetAddException!.ExitCode, Is.EqualTo(failingProcessResult.ExitCode));
+            });
         }
 
         [Test]
         public void Should_TryDeleteDirectoryRecursively_The_Temp_Local_Feed_Directory_On_CleanUp()
         {
-            _mockNugetAddCommand.Setup(nugetAddCommand => nugetAddCommand.AddPackageToSource("nupkgPath", "tempdir", null))
-                .Returns(new ProcessResult("", "", 0));
-            _nugetTempEnvironmentManager.Setup("nupkgPath", project, "packageInstallPath", null);
+            _ = _mockNugetAddCommand.Setup(nugetAddCommand => nugetAddCommand.AddPackageToSource("nupkgPath", "tempdir", null))
+                .Returns(new ProcessResult(string.Empty, string.Empty, 0));
+            _nugetTempEnvironmentManager!.Setup("nupkgPath", _project, "packageInstallPath", null);
 
             _nugetTempEnvironmentManager.CleanUp();
 

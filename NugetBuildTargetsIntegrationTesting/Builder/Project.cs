@@ -1,13 +1,12 @@
 ﻿namespace NugetBuildTargetsIntegrationTesting.Builder
 {
-    internal class Project(IBuildManager doBuild) : IProject, IAddNuget, IProjectBuilder
+    internal sealed class Project(IBuildManager buildManager) : IProject, IAddNuget, IProjectBuilder
     {
         public const string DefaultProjectRelativePath = "dependentProject.csproj";
         private IEnumerable<(string Contents, string RelativePath)>? _files;
         private string? _projectContents;
         private string? _relativePath;
         private string? _nuPkgPath;
-        private readonly IBuildManager _buildManager = doBuild;
 
         public IProject AddFiles(IEnumerable<(string Contents, string RelativePath)> files)
         {
@@ -35,7 +34,7 @@
         public IBuildResult BuildWithMSBuild(string arguments = "") => BuildProject(false, arguments);
 
         private BuildResult BuildProject(bool isDotNet, string arguments)
-            => _buildManager.Build(
+            => buildManager.Build(
                 new ProjectBuildContext(_projectContents!, _relativePath!, _nuPkgPath!, _files),
                 isDotNet,
                 arguments);

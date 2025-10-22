@@ -1,5 +1,4 @@
-﻿
-namespace NugetBuildTargetsIntegrationTesting.Builder
+﻿namespace NugetBuildTargetsIntegrationTesting.Builder
 {
     internal interface IBuildManager
     {

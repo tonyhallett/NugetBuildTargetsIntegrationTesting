@@ -1,71 +1,82 @@
-## NugetBuildTargetsIntegrationTesting.NugetBuildTargetsTestSetup
+# DependentProjectBuilder
 
-### Overview
+## Overview
 
-`NugetBuildTargetsTestSetup` streamlines integration testing for NuGet packages providing build targets. 
+`DependentProjectBuilder` streamlines integration testing for NuGet packages providing build targets.
 It creates a temporary nuget environment with temporary dependent projects that are built for you, enabling custom targets to be run and their behaviour asserted.
 
-### Constructor Requirements
+## Command requirements
 
-You can use the default constructor if both `nuget` and `dotnet` are available on your system path.  
-If these requirements cannot be met, you may use the alternative constructors to inject custom implementations for project building or NuGet package management:
+The NuGet CLI [add command](https://learn.microsoft.com/en-us/nuget/reference/cli-reference/cli-ref-add) is used.
 
-- `NugetBuildTargetsTestSetup(IProjectBuilder projectBuilder)`
-- `NugetBuildTargetsTestSetup(INugetAddCommand nugetAddCommand)`
-- `NugetBuildTargetsTestSetup(IProjectBuilder projectBuilder, INugetAddCommand nugetAddCommand)`
+If you `BuildWithDotNet` then the .Net CLI [build command](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-build) is used.
 
+If you `BuildWithMSBuild` then [msbuild.exe](https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild-command-line-reference?view=vs-2022) is used.
 
+Each of these are expected to be on Path.
 
-### Example NUnit Test
+If this is not the case then the `DependentProjectBuilder` constructor can be passed a `CommandPaths` object.
 
-Below is an example NUnit test using `NugetBuildTargetsTestSetup` as a private readonly variable, with `TearDown` called in a `OneTimeTearDown`:
+## Usage
 
+1.  In your tests create a field of DependentProjectBuilder.
+2.  CreateProject()
+3.  If required AddFiles - `AddFiles(IEnumerable<(string Contents, string RelativePath)> files);`
+4.  Add the proj file as a string - `AddProject(string projectContents, string relativePath);`
+5.  Add the nupkg to test - `AddNuPkg(string nuPkgPath);`
+6.  Build - if required specify your own arguments that will be appended to the generated project file path
 
-```csharp
-using NUnit.Framework;
-using NugetBuildTargetsIntegrationTesting;
+    `IBuildResult BuildWithDotNet(string arguments = "");`
 
-namespace IntegrationTests
-{
-    [TestFixture]
-    public class NugetBuildTargetsTests
-    {
-        private readonly NugetBuildTargetsTestSetup _testSetup = new NugetBuildTargetsTestSetup();
+    Default is - `-c Release`
 
-        [Test]
-        public void CanBuildProjectWithNugetPackage()
-        {
-            string projectXml = "<Project Sdk=\"Microsoft.NET.Sdk\"/>";
-            string nupkgPath = @"C:\packages\MyPackage.1.0.0.nupkg";
+    `IBuildResult BuildWithMSBuild(string arguments = "");`
 
-            string buildOutput = _testSetup.Setup(projectXml, nupkgPath);
+    Default is `-restore -property:Configuration=Release`
 
-            Assert.IsNotNull(buildOutput);
-        }
+    If your task is not working you may want to add the binary logger switch for viewing with the [MSBuild Structured Log Viewer](https://www.msbuildlog.com/)
 
-        [OneTimeTearDown]
-        public void Cleanup()
-        {
-            _testSetup.TearDown();
-        }
-    }
-}
+    **BuildWithMSBuild sdk style** 
+    The package [Microsoft.Net.Sdk.Compilers.Toolset](https://www.nuget.org/packages/Microsoft.Net.Sdk.Compilers.Toolset) may be rquired.
+
+    > This package is automatically downloaded when your MSBuild version does not match your SDK version.
+    
+    If you already have the corresponding version in `{userprofile}\.nuget\packages` it will be used **otherwise internet connectivity is required.**
+
+7.  If you need to rebuild the return value of `BuildWithDotNet` and `BuildWithMSBuild`, `IBuildResult`, has
+
+    `IBuildResult AddFiles(IEnumerable<(string Contents, string RelativePath)> files);`
+
+    `void Rebuild(string? args = null);`
+
+    Rebuild will use the command that you chose before. If you do not specify args then it will use the same args from before.
+
+## Failing build
+
+The `IBuildResult` has the following properties
 
 ```
+    string StandardError { get; }
 
-### Actual NUnitTest
+    string ErrorAndOutput { get; }
+
+    string StandardOutput { get; }
+
+    bool Passed { get; }
+```
+
+## Temp directories
+
+The `IBuildResult` has the properties
+
+```
+    DirectoryInfo ContainingDirectory { get; }
+
+    DirectoryInfo ProjectDirectory { get; }
+```
+
+Use `DependentProjectBuilder` `TearDown()` in a one time tear down to remove all temp directories.
+
+### NUnitTest
 
 See the IntegrationTest project in the GitHub repository for a simple test that uses this setup class.
-
-### Setup
-
-If additional files need to be added for the dependent project you can use the projectPathCallback parameter.
-This provides the path to the temporary dependent project so you can add files as needed, prior to building.
-```csharp
-public string Setup(string dependentProjectContents, string nupkgPath, Action<string>? projectPathCallback = null)
-```
-
-
-### Additional Information
-
-`NugetTempEnvironmentManager` is available if you would like to use it as part of your own setup class.

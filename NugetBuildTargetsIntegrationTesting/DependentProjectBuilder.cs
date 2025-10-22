@@ -1,6 +1,5 @@
 ﻿using NugetBuildTargetsIntegrationTesting.Builder;
 using NugetBuildTargetsIntegrationTesting.Building;
-using NugetBuildTargetsIntegrationTesting.DotNet;
 using NugetBuildTargetsIntegrationTesting.IO;
 using NugetBuildTargetsIntegrationTesting.MSBuildHelpers;
 using NugetBuildTargetsIntegrationTesting.Nuget;
@@ -12,7 +11,7 @@ namespace NugetBuildTargetsIntegrationTesting
     {
         private readonly INugetTestSetup _nugetTestSetup;
         private readonly IIOUtilities _ioUtilities;
-        private readonly IDotnetMsBuildProjectBuilder projectBuilder;
+        private readonly IDotnetMsBuildProjectBuilder _projectBuilder;
         private string? _tempDependentProjectsDirectory;
 
         public DependentProjectBuilder(CommandPaths? commandPaths = null)
@@ -23,8 +22,8 @@ namespace NugetBuildTargetsIntegrationTesting
                     new NugetTempEnvironmentManager(
                         IOUtilities.Instance,
                         new NugetAddCommand(),
-                        MsBuildProjectHelper.Instance)
-                ),
+                        MsBuildProjectHelper.Instance,
+                        new NugetGlobalPackagesPathProvider())),
                 new IOUtilities(),
                 new DotnetMsBuildProjectBuilder())
         {
@@ -34,17 +33,18 @@ namespace NugetBuildTargetsIntegrationTesting
             CommandPaths? commandPaths,
             INugetTestSetup nugetTestSetup,
             IIOUtilities ioUtilities,
-            IDotnetMsBuildProjectBuilder projectBuilder
-            )
+            IDotnetMsBuildProjectBuilder projectBuilder)
         {
             _nugetTestSetup = nugetTestSetup;
             _ioUtilities = ioUtilities;
-            this.projectBuilder = projectBuilder;
-            if (commandPaths != null)
+            _projectBuilder = projectBuilder;
+            if (commandPaths == null)
             {
-                nugetTestSetup.NugetCommandPath = commandPaths.Nuget;
-                projectBuilder.SetCommandPaths(commandPaths.DotNet, commandPaths.MsBuild);
+                return;
             }
+
+            nugetTestSetup.NugetCommandPath = commandPaths.Nuget;
+            projectBuilder.SetCommandPaths(commandPaths.DotNet, commandPaths.MsBuild);
         }
 
         private string GetUniqueDependentProjectContainingDirectory()
@@ -57,44 +57,44 @@ namespace NugetBuildTargetsIntegrationTesting
 
         BuildResult IBuildManager.Build(ProjectBuildContext projectContext, bool isDotnet, string arguments)
         {
-            var dependentProject = _ioUtilities.XDocParse(projectContext.ProjectContents);
+            System.Xml.Linq.XDocument dependentProject = _ioUtilities.XDocParse(projectContext.ProjectContents);
             _nugetTestSetup.Setup(projectContext.NuPkgPath, dependentProject);
 
             string projectContainingDirectory = GetUniqueDependentProjectContainingDirectory();
 
-            var projectFilePath = Path.Combine(projectContainingDirectory, projectContext.ProjectRelativePath);
-            var projectDirectoryPath = Path.GetDirectoryName(projectFilePath);
-            var projectFileName = Path.GetFileName(projectFilePath);
+            string projectFilePath = Path.Combine(projectContainingDirectory, projectContext.ProjectRelativePath);
+            string? projectDirectoryPath = Path.GetDirectoryName(projectFilePath);
+            string projectFileName = Path.GetFileName(projectFilePath);
 
-            _ioUtilities.SaveXDocumentToDirectory(dependentProject, projectDirectoryPath!, projectFileName);
+            _ = _ioUtilities.SaveXDocumentToDirectory(dependentProject, projectDirectoryPath!, projectFileName);
 
-            AddFiles(projectContext.Files, projectContainingDirectory);
+            this.AddFiles(projectContext.Files, projectContainingDirectory);
 
             var projectDirectory = new DirectoryInfo(projectDirectoryPath!);
             var containingDirectory = new DirectoryInfo(projectContainingDirectory);
-            var processResult = projectBuilder.Build(projectFilePath, isDotnet, arguments, projectContainingDirectory);
+            ProcessResult processResult = _projectBuilder.Build(projectFilePath, isDotnet, arguments, projectContainingDirectory);
 
-            
-            Action<IEnumerable<(string Contents, string RelativePath)>> addFiles = (files) =>
-            {
-                AddFiles(files, projectContainingDirectory);
-            };
-            Func<string?, ProcessResult> rebuild = newArgs =>
+            void AddFiles(IEnumerable<(string Contents, string RelativePath)> files)
+                => this.AddFiles(files, projectContainingDirectory);
+            ProcessResult Rebuild(string? newArgs)
             {
                 arguments = newArgs ?? arguments;
-                return projectBuilder.Build(projectFilePath, isDotnet, arguments, projectContainingDirectory);
-            };
-            return new BuildResult(projectDirectory, containingDirectory, processResult,addFiles, rebuild);
+                return _projectBuilder.Build(projectFilePath, isDotnet, arguments, projectContainingDirectory);
+            }
+
+            return new BuildResult(projectDirectory, containingDirectory, processResult, AddFiles, Rebuild);
         }
 
         private void AddFiles(IEnumerable<(string Contents, string RelativePath)>? files, string projectContainingDirectory)
         {
-            if (files != null)
+            if (files == null)
             {
-                foreach (var (Contents, RelativePath) in files)
-                {
-                    _ioUtilities.AddRelativeFile(projectContainingDirectory, RelativePath, Contents);
-                }
+                return;
+            }
+
+            foreach ((string Contents, string RelativePath) in files)
+            {
+                _ioUtilities.AddRelativeFile(projectContainingDirectory, RelativePath, Contents);
             }
         }
 

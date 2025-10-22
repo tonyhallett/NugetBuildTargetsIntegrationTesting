@@ -3,13 +3,13 @@ using NugetBuildTargetsIntegrationTesting.MSBuildHelpers;
 
 namespace UnitTests
 {
-    public class MsBuildProjectHelper_Tests
+    internal sealed class MsBuildProjectHelper_Tests
     {
-        [TestCase("C:\\packages\\Package.1.0.0.nupkg", "Package","1.0.0")]
+        [TestCase("C:\\packages\\Package.1.0.0.nupkg", "Package", "1.0.0")]
         [TestCase("C:\\packages\\Part1.Part2.2.0.0.nupkg", "Part1.Part2", "2.0.0")]
-        public void Test(string nupkgPath, string expectedPackageId, string expectedVersion)
+        public void Should_AddPackageReference(string nupkgPath, string expectedPackageId, string expectedVersion)
         {
-            (string packageId, string version)  = GetAttributes();
+            (string packageId, string version) = GetAttributes();
 
             Assert.Multiple(() =>
             {
@@ -17,17 +17,16 @@ namespace UnitTests
                 Assert.That(version, Is.EqualTo(expectedVersion));
             });
 
-            (string packageId, string version) GetAttributes()
+            (string PackageId, string Version) GetAttributes()
             {
                 var project = XDocument.Parse("<Project Sdk=\"Microsoft.NET.Sdk\"/>");
                 new MsBuildProjectHelper().AddPackageReference(project, nupkgPath);
                 var itemGroup = project.Root!.FirstNode as XElement;
                 var packageReference = itemGroup!.FirstNode as XElement;
-                var packageId = packageReference!.Attribute("Include")!.Value;
-                var version = packageReference.Attribute("Version")!.Value;
+                string packageId = packageReference!.Attribute("Include")!.Value;
+                string version = packageReference.Attribute("Version")!.Value;
                 return (packageId, version);
             }
         }
-
     }
 }

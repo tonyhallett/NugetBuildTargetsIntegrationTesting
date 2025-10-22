@@ -1,20 +1,19 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Xml.Linq;
 
 namespace NugetBuildTargetsIntegrationTesting.IO
 {
-    internal class IOUtilities : IIOUtilities
+    [ExcludeFromCodeCoverage]
+    internal sealed class IOUtilities : IIOUtilities
     {
         public static IOUtilities Instance { get; } = new IOUtilities();
 
-        public string CreateTempDirectory()
-        {
-            return Directory.CreateTempSubdirectory().FullName;
-        }
+        public string CreateTempDirectory() => Directory.CreateTempSubdirectory().FullName;
 
         public string CreateUniqueSubdirectory(string parentDirectory)
         {
             string uniqueDir = Path.Combine(parentDirectory, Path.GetRandomFileName());
-            Directory.CreateDirectory(uniqueDir);
+            _ = Directory.CreateDirectory(uniqueDir);
             return uniqueDir;
         }
 
@@ -39,10 +38,10 @@ namespace NugetBuildTargetsIntegrationTesting.IO
         {
             if (!Directory.Exists(directory))
             {
-                Directory.CreateDirectory(directory);
+                _ = Directory.CreateDirectory(directory);
             }
 
-            var path = Path.Combine(directory, fileName);
+            string path = Path.Combine(directory, fileName);
             doc.Save(path);
             return path;
         }
@@ -51,11 +50,11 @@ namespace NugetBuildTargetsIntegrationTesting.IO
 
         public void AddRelativeFile(string directory, string relativePath, string contents)
         {
-            var filePath = Path.Combine(directory, relativePath);
-            var directoryPath = Path.GetDirectoryName(filePath);
+            string filePath = Path.Combine(directory, relativePath);
+            string? directoryPath = Path.GetDirectoryName(filePath);
             if (!Directory.Exists(directoryPath))
             {
-                Directory.CreateDirectory(directoryPath!);
+                _ = Directory.CreateDirectory(directoryPath!);
             }
 
             File.WriteAllText(filePath, contents);

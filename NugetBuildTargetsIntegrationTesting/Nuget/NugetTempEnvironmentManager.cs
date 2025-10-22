@@ -4,32 +4,31 @@ using NugetBuildTargetsIntegrationTesting.MSBuildHelpers;
 
 namespace NugetBuildTargetsIntegrationTesting.Nuget
 {
-    internal class NugetTempEnvironmentManager : INugetTempEnvironmentManager
+    internal sealed class NugetTempEnvironmentManager : INugetTempEnvironmentManager
     {
+        private const string NuGetApiSource = "https://api.nuget.org/v3/index.json";
         private readonly IIOUtilities _ioUtilities;
         private readonly INugetAddCommand _nugetAddCommand;
         private readonly IMsBuildProjectHelper _msBuildProjectHelper;
-        private string? _localFeedPath;
+        private readonly INuGetGlobalPackagesPathProvider _nuGetGlobalPackagesPathProvider;
         private readonly HashSet<string> _addedPackages = [];
-
-        public NugetTempEnvironmentManager() :
-            this(IOUtilities.Instance, new NugetAddCommand(), MsBuildProjectHelper.Instance)
-        {
-        }
+        private string? _localFeedPath;
 
         internal NugetTempEnvironmentManager(
             IIOUtilities ioUtilities,
             INugetAddCommand nugetAddCommand,
-            IMsBuildProjectHelper msBuildProjectHelper)
+            IMsBuildProjectHelper msBuildProjectHelper,
+            INuGetGlobalPackagesPathProvider nuGetGlobalPackagesPathProvider)
         {
             _ioUtilities = ioUtilities;
             _nugetAddCommand = nugetAddCommand;
             _msBuildProjectHelper = msBuildProjectHelper;
+            _nuGetGlobalPackagesPathProvider = nuGetGlobalPackagesPathProvider;
         }
 
         public void Setup(string nupkgPath, XDocument project, string packageInstallPath, string? nugetCommandPath)
         {
-            var propertyGroup = _msBuildProjectHelper.InsertPropertyGroup(project);
+            XElement propertyGroup = _msBuildProjectHelper.InsertPropertyGroup(project);
 
             SetUpForTempSource(nupkgPath, propertyGroup, nugetCommandPath);
             SetupTempPackageInstallPath(propertyGroup, packageInstallPath);
@@ -38,28 +37,33 @@ namespace NugetBuildTargetsIntegrationTesting.Nuget
         private void SetUpForTempSource(string nupkgPath, XElement propertyGroup, string? nugetCommandPath)
         {
             AddPackageToTempSource(nupkgPath, nugetCommandPath);
-            /* 
-                https://api.nuget.org/v3/index.json required for MSBuild Microsoft.Net.Sdk.Compilers.Toolset
-
+            /*
                 https://www.nuget.org/packages/Microsoft.Net.Sdk.Compilers.Toolset
                 This package is automatically downloaded when your MSBuild version does not match your SDK version.
                 Then the package is used to build your project with the compiler version matching your SDK version
                 instead of the one bundled with MSBuild.
+
+                fallback to download
              */
-            _msBuildProjectHelper.AddProperty(propertyGroup, "RestoreSources", $"{_localFeedPath!};https://api.nuget.org/v3/index.json");
+            string globalPackagesPath = _nuGetGlobalPackagesPathProvider.Provide();
+            _msBuildProjectHelper.AddProperty(propertyGroup, "RestoreSources", $"{_localFeedPath!};{globalPackagesPath};{NuGetApiSource}");
         }
 
         private void AddPackageToTempSource(string nupkgPath, string? nugetCommandPath)
         {
             _localFeedPath ??= _ioUtilities.CreateTempDirectory();
-            if (_addedPackages.Add(nupkgPath))
+            if (!_addedPackages.Add(nupkgPath))
             {
-                Processing.ProcessResult processResult = _nugetAddCommand.AddPackageToSource(nupkgPath, _localFeedPath, nugetCommandPath);
-                if (processResult.ExitCode != 0)
-                {
-                    throw new NugetAddException(processResult.Error, processResult.Output, processResult.ExitCode);
-                }
+                return;
             }
+
+            Processing.ProcessResult processResult = _nugetAddCommand.AddPackageToSource(nupkgPath, _localFeedPath, nugetCommandPath);
+            if (processResult.ExitCode == 0)
+            {
+                return;
+            }
+
+            throw new NugetAddException(processResult.StandardError, processResult.StandardOutput, processResult.ExitCode);
         }
 
         private void SetupTempPackageInstallPath(XElement propertyGroup, string packageInstallPath)
