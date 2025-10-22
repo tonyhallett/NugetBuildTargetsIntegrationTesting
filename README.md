@@ -28,11 +28,11 @@ If this is not the case then the `DependentProjectBuilder` constructor can be pa
 
     `IBuildResult BuildWithDotNet(string arguments = "");`
 
-    Default is - `-c Release`
+    Default is - `-c Release -property:nodeReuse=false`
 
     `IBuildResult BuildWithMSBuild(string arguments = "");`
 
-    Default is `-restore -property:Configuration=Release`
+    Default is `-restore -property:Configuration=Release -property:nodeReuse=false`
 
     If your task is not working you may want to add the binary logger switch for viewing with the [MSBuild Structured Log Viewer](https://www.msbuildlog.com/)
 

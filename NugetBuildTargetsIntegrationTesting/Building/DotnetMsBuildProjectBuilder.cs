@@ -2,14 +2,21 @@
 
 namespace NugetBuildTargetsIntegrationTesting.Building
 {
-    internal sealed class DotnetMsBuildProjectBuilder() : IDotnetMsBuildProjectBuilder
+    internal sealed class DotnetMsBuildProjectBuilder : IDotnetMsBuildProjectBuilder
     {
-        private const string DefaultDotNetBuildArguments = "-c Release";
-        private readonly string _defaultMSBuildArguments = $"-restore {CreateCommandLineProperty("Configuration", "Release")}";
+        private readonly string _defaultDotNetBuildArguments;
+        private readonly string _noNodeReuseProperty = CreatePropertySwitch("nodeReuse", "false");
+        private readonly string _defaultMSBuildArguments;
         private string _dotnetFileName = "dotnet";
         private string _msBuildFileName = "msbuild";
 
-        private static string CreateCommandLineProperty(string name, string value) => $"-property:{name}={value}";
+        public DotnetMsBuildProjectBuilder()
+        {
+            _defaultMSBuildArguments = $"-restore {_noNodeReuseProperty} {CreatePropertySwitch("Configuration", "Release")}";
+            _defaultDotNetBuildArguments = $"-c Release {_noNodeReuseProperty}";
+        }
+
+        private static string CreatePropertySwitch(string name, string value) => $"-property:{name}={value}";
 
         public ProcessResult Build(string projectFilePath, bool isDotnet, string arguments, string workingDirectory)
         {
@@ -32,7 +39,7 @@ namespace NugetBuildTargetsIntegrationTesting.Building
 
         private ProcessResult DotNetBuild(string quotedProjectFilePath, string arguments, string workingDirectory)
         {
-            arguments = arguments.Length == 0 ? DefaultDotNetBuildArguments : arguments;
+            arguments = arguments.Length == 0 ? _defaultDotNetBuildArguments : arguments;
             arguments = $"build {quotedProjectFilePath} {arguments}";
             return ProcessHelper.StartAndWait(_dotnetFileName, arguments, workingDirectory);
         }
