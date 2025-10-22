@@ -29,8 +29,7 @@ namespace UnitTests
                 _mockIOUtilities.Object,
                 _mockNugetAddCommand.Object,
                 _mockMsBuildProjectHelper.Object,
-                mockNuGetGlobalPackagesPathProvider.Object
-                );
+                mockNuGetGlobalPackagesPathProvider.Object);
         }
 
         [Test]

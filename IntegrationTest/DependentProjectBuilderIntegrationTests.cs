@@ -81,7 +81,7 @@ namespace IntegrationTest
             return !File.Exists(nupkgPath) ? throw new Exception("pack failed") : nupkgPath;
         }
 
-        private class IntegrationTestCase(string projectFileRelativePath, bool buildWithMS, string buildArgs = "")
+        private sealed class IntegrationTestCase(string projectFileRelativePath, bool buildWithMS, string buildArgs = "")
             : TestCaseData(projectFileRelativePath, buildWithMS, buildArgs)
         {
         }
