@@ -98,7 +98,7 @@ namespace IntegrationTest
         ];
 
         [TestCaseSource(nameof(s_testCases))]
-        public void Setup_ShouldInjectCustomBuildTargetAndOutputMessage(
+        public async Task Setup_ShouldInjectCustomBuildTargetAndOutputMessage(
             string projectFileRelativePath,
             bool buildWithMSBuild,
             string buildArgs)
@@ -121,9 +121,11 @@ namespace IntegrationTest
                 .AddProject(dependentProjectContents, projectFileRelativePath)
                 .AddNuPkg(nupkgPath);
 
-            IBuildResult buildResult = buildArgs.Length == 0
-                ? buildWithMSBuild ? projectBuilder.BuildWithMSBuild() : projectBuilder.BuildWithDotNet()
-                : buildWithMSBuild ? projectBuilder.BuildWithMSBuild(buildArgs) : projectBuilder.BuildWithDotNet(buildArgs);
+            Task<IBuildResult> buildResultTask = buildArgs.Length == 0
+                ? buildWithMSBuild ? projectBuilder.BuildWithMSBuildAsync() : projectBuilder.BuildWithDotNetAsync()
+                : buildWithMSBuild ? projectBuilder.BuildWithMSBuildAsync(buildArgs) : projectBuilder.BuildWithDotNetAsync(buildArgs);
+
+            IBuildResult buildResult = await buildResultTask;
             StringAssert.Contains("Hello from CustomMessageTarget!", buildResult.StandardOutput);
         }
 

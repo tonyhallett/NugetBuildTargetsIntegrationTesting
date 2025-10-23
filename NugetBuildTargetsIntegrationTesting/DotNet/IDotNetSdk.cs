@@ -4,6 +4,6 @@
     {
         string DotNetFileName { get; set; }
 
-        string? GetActiveSdkSdksPath();
+        Task<string?> GetActiveSdkSdksPathAsync();
     }
 }

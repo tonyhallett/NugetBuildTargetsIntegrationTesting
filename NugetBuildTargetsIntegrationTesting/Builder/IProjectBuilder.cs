@@ -2,8 +2,8 @@
 {
     public interface IProjectBuilder
     {
-        IBuildResult BuildWithDotNet(string arguments = "");
+        Task<IBuildResult> BuildWithDotNetAsync(string arguments = "");
 
-        IBuildResult BuildWithMSBuild(string arguments = "");
+        Task<IBuildResult> BuildWithMSBuildAsync(string arguments = "");
     }
 }

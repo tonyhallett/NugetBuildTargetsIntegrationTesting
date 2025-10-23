@@ -2,7 +2,7 @@ namespace NugetBuildTargetsIntegrationTesting.Processing
 {
     internal static class ProcessHelper
     {
-        public static ProcessResult StartAndWait(string fileName, string arguments, string? workingDirectory = null)
+        public static async Task<ProcessResult> StartAndWaitAsync(string fileName, string arguments, string? workingDirectory = null)
         {
             var process = new System.Diagnostics.Process
             {
@@ -19,10 +19,17 @@ namespace NugetBuildTargetsIntegrationTesting.Processing
             };
             _ = process.Start();
 
-            string output = process.StandardOutput.ReadToEnd();
-            string error = process.StandardError.ReadToEnd();
-            process.WaitForExit();
-            return new ProcessResult(output, error, process.ExitCode);
+            Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
+            Task<string> errorTask = process.StandardError.ReadToEndAsync();
+            if (!process.WaitForExit(60000))
+            {
+                process.Kill(entireProcessTree: true);
+                return new ProcessResult(outputTask.Result, errorTask.Result, -1);
+            }
+
+            _ = await Task.WhenAll(outputTask, errorTask).ConfigureAwait(false);
+
+            return new ProcessResult(outputTask.Result, errorTask.Result, process.ExitCode);
         }
     }
 }

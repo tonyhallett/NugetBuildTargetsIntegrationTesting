@@ -55,10 +55,10 @@ namespace NugetBuildTargetsIntegrationTesting
 
         public IProject NewProject() => new Project(this);
 
-        BuildResult IBuildManager.Build(ProjectBuildContext projectContext, bool isDotnet, string arguments)
+        async Task<BuildResult> IBuildManager.BuildAsync(ProjectBuildContext projectContext, bool isDotnet, string arguments)
         {
             System.Xml.Linq.XDocument dependentProject = _ioUtilities.XDocParse(projectContext.ProjectContents);
-            _nugetTestSetup.Setup(projectContext.NuPkgPath, dependentProject);
+            await _nugetTestSetup.SetupAsync(projectContext.NuPkgPath, dependentProject);
 
             string projectContainingDirectory = GetUniqueDependentProjectContainingDirectory();
 
@@ -72,14 +72,14 @@ namespace NugetBuildTargetsIntegrationTesting
 
             var projectDirectory = new DirectoryInfo(projectDirectoryPath!);
             var containingDirectory = new DirectoryInfo(projectContainingDirectory);
-            ProcessResult processResult = _projectBuilder.Build(projectFilePath, isDotnet, arguments, projectContainingDirectory);
+            ProcessResult processResult = await _projectBuilder.BuildAsync(projectFilePath, isDotnet, arguments, projectContainingDirectory);
 
             void AddFiles(IEnumerable<(string Contents, string RelativePath)> files)
                 => this.AddFiles(files, projectContainingDirectory);
-            ProcessResult Rebuild(string? newArgs)
+            Task<ProcessResult> Rebuild(string? newArgs)
             {
                 arguments = newArgs ?? arguments;
-                return _projectBuilder.Build(projectFilePath, isDotnet, arguments, projectContainingDirectory);
+                return _projectBuilder.BuildAsync(projectFilePath, isDotnet, arguments, projectContainingDirectory);
             }
 
             return new BuildResult(projectDirectory, containingDirectory, processResult, AddFiles, Rebuild);

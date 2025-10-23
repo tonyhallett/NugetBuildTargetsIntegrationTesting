@@ -30,17 +30,17 @@ namespace NugetBuildTargetsIntegrationTesting.Nuget
             _nuGetGlobalPackagesPathProvider = nuGetGlobalPackagesPathProvider;
         }
 
-        public void Setup(string nupkgPath, XDocument project, string packageInstallPath, string? nugetCommandPath)
+        public async Task SetupAsync(string nupkgPath, XDocument project, string packageInstallPath, string? nugetCommandPath)
         {
             XElement propertyGroup = _msBuildProjectHelper.InsertPropertyGroup(project);
 
-            SetUpForTempSource(nupkgPath, propertyGroup, nugetCommandPath);
+            await SetUpForTempSourceAsync(nupkgPath, propertyGroup, nugetCommandPath);
             SetupTempPackageInstallPath(propertyGroup, packageInstallPath);
         }
 
-        private void SetUpForTempSource(string nupkgPath, XElement propertyGroup, string? nugetCommandPath)
+        private async Task SetUpForTempSourceAsync(string nupkgPath, XElement propertyGroup, string? nugetCommandPath)
         {
-            AddPackageToTempSource(nupkgPath, nugetCommandPath);
+            await AddPackageToTempSourceAsync(nupkgPath, nugetCommandPath);
             /*
                 https://www.nuget.org/packages/Microsoft.Net.Sdk.Compilers.Toolset
                 This package is automatically downloaded when your MSBuild version does not match your SDK version.
@@ -53,7 +53,7 @@ namespace NugetBuildTargetsIntegrationTesting.Nuget
             _msBuildProjectHelper.AddProperty(propertyGroup, "RestoreSources", $"{_localFeedPath!};{globalPackagesPath};{NuGetApiSource}");
         }
 
-        private void AddPackageToTempSource(string nupkgPath, string? nugetCommandPath)
+        private async Task AddPackageToTempSourceAsync(string nupkgPath, string? nugetCommandPath)
         {
             _localFeedPath ??= _ioUtilities.CreateTempDirectory();
             if (!_addedPackages.Add(nupkgPath))
@@ -61,7 +61,7 @@ namespace NugetBuildTargetsIntegrationTesting.Nuget
                 return;
             }
 
-            Processing.ProcessResult processResult = _nugetAddCommand.AddPackageToSource(nupkgPath, _localFeedPath, nugetCommandPath);
+            Processing.ProcessResult processResult = await _nugetAddCommand.AddPackageToSourceAsync(nupkgPath, _localFeedPath, nugetCommandPath);
             if (processResult.ExitCode == 0)
             {
                 return;

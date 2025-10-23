@@ -6,7 +6,7 @@ namespace NugetBuildTargetsIntegrationTesting.Nuget
     {
         string? NugetCommandPath { get; set; }
 
-        void Setup(string nupkgPath, XDocument project);
+        Task SetupAsync(string nupkgPath, XDocument project);
 
         void TearDown();
     }

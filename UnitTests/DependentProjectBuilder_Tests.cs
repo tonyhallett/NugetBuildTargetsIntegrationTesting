@@ -27,7 +27,7 @@ namespace UnitTests
         {
             _projectXDoc = XDocument.Parse(ProjectContent);
             _mockNugetTestSetup = new Mock<INugetTestSetup>();
-            _ = _mockNugetTestSetup.Setup(mock => mock.Setup(NuPkgPath, _projectXDoc))
+            _ = _mockNugetTestSetup.Setup(mock => mock.SetupAsync(NuPkgPath, _projectXDoc))
                 .Callback<string, XDocument>((_, project) => NugetTestSetupModifyProject(project));
             _mockIOUtiities = new Mock<IIOUtilities>();
             _ = _mockIOUtiities.Setup(mock => mock.CreateTempDirectory()).Returns("rootdir");
@@ -53,7 +53,7 @@ namespace UnitTests
                 Times.Once);
         }
 
-        private IBuildResult Build(
+        private Task<IBuildResult> BuildAsync(
             string? projectRelativePath = null,
             List<(string Contents, string RelativePath)>? files = null,
             bool dotNetBuild = true,
@@ -67,17 +67,17 @@ namespace UnitTests
 
             IAddNuget addNuget = projectRelativePath == null ? project.AddProject(ProjectContent) : project.AddProject(ProjectContent, projectRelativePath);
             IProjectBuilder projectBuilder = addNuget.AddNuPkg(NuPkgPath);
-            return dotNetBuild ? projectBuilder.BuildWithDotNet(args) : projectBuilder.BuildWithMSBuild(args);
+            return dotNetBuild ? projectBuilder.BuildWithDotNetAsync(args) : projectBuilder.BuildWithMSBuildAsync(args);
         }
 
         [Test]
         public void Should_NugetTestSetup_Setup_On_Build()
         {
-            _ = Build();
+            _ = BuildAsync();
 
             _mockNugetTestSetup.Verify(
                 mockNugetTestSetup =>
-                    mockNugetTestSetup.Setup(NuPkgPath, _projectXDoc),
+                    mockNugetTestSetup.SetupAsync(NuPkgPath, _projectXDoc),
                 Times.Once);
         }
 
@@ -96,7 +96,7 @@ namespace UnitTests
                     didSave = true;
                 });
 
-            _ = Build(projectRelativePath);
+            _ = BuildAsync(projectRelativePath);
 
             Assert.That(didSave, Is.True);
 
@@ -109,7 +109,7 @@ namespace UnitTests
             [
                 ("contents", "subdir/rel.txt")
             ];
-            _ = Build(null, files);
+            _ = BuildAsync(null, files);
 
             _mockIOUtiities.Verify(
                 mock => mock.AddRelativeFile(ProjectContainingDir, "subdir/rel.txt", "contents"),
@@ -118,18 +118,18 @@ namespace UnitTests
 
         [TestCase(true, 0, true)]
         [TestCase(false, 9, false)]
-        public void Should_Build_Using_DotnetMsBuildProjectBuilder(bool dotNetBuild, int exitCode, bool expectedPassed)
+        public async Task Should_Build_Using_DotnetMsBuildProjectBuilder(bool dotNetBuild, int exitCode, bool expectedPassed)
         {
             var processResult = new ProcessResult("output", "error", exitCode);
             _ = _mockDotNetMsBuildProjectBuilder.Setup(
                 mockDotNetMsBuildProjectBuilder =>
-                    mockDotNetMsBuildProjectBuilder.Build(
+                    mockDotNetMsBuildProjectBuilder.BuildAsync(
                         $"{ProjectContainingDir}\\{Project.DefaultProjectRelativePath}",
                         dotNetBuild,
                         BuildArgs,
-                        ProjectContainingDir)).Returns(processResult);
+                        ProjectContainingDir)).ReturnsAsync(processResult);
 
-            IBuildResult buildResult = Build(null, null, dotNetBuild);
+            IBuildResult buildResult = await BuildAsync(null, null, dotNetBuild);
 
             Assert.Multiple(() =>
             {
@@ -140,18 +140,18 @@ namespace UnitTests
         }
 
         [Test]
-        public void Should_Be_Able_To_AddFiles_After_First_Build()
+        public async Task Should_Be_Able_To_AddFiles_After_First_Build()
         {
             var processResult = new ProcessResult(string.Empty, string.Empty, 0);
             _ = _mockDotNetMsBuildProjectBuilder.Setup(
                 mockDotNetMsBuildProjectBuilder =>
-                    mockDotNetMsBuildProjectBuilder.Build(
+                    mockDotNetMsBuildProjectBuilder.BuildAsync(
                         $"{ProjectContainingDir}\\{Project.DefaultProjectRelativePath}",
                         true,
                         BuildArgs,
-                        ProjectContainingDir)).Returns(processResult);
+                        ProjectContainingDir)).ReturnsAsync(processResult);
 
-            IBuildResult buildResult = Build(null, null, true);
+            IBuildResult buildResult = await BuildAsync(null, null, true);
 
             const string rebuildFileContents = "contents";
             const string rebuildRelativeFilePath = "relative.txt";
@@ -162,22 +162,22 @@ namespace UnitTests
 
         [TestCase(true, true)]
         [TestCase(false, false)]
-        public void Should_Rebuild_With_Same_Command_And_Args_By_Default(bool dotnetBuild, bool passed)
+        public async Task Should_Rebuild_With_Same_Command_And_Args_By_Default(bool dotnetBuild, bool passed)
         {
             const string customArgs = "custom args";
             var processResult1 = new ProcessResult("output1", "error1", 0);
             var processResult2 = new ProcessResult("output2", "error2", passed ? 0 : 1);
             _ = _mockDotNetMsBuildProjectBuilder.SetupSequence(
                 mockDotNetMsBuildProjectBuilder =>
-                    mockDotNetMsBuildProjectBuilder.Build(
+                    mockDotNetMsBuildProjectBuilder.BuildAsync(
                         $"{ProjectContainingDir}\\{Project.DefaultProjectRelativePath}",
                         dotnetBuild,
                         customArgs,
-                        ProjectContainingDir)).Returns(processResult1).Returns(processResult2);
+                        ProjectContainingDir)).ReturnsAsync(processResult1).ReturnsAsync(processResult2);
 
-            IBuildResult buildResult = Build(null, null, dotnetBuild, customArgs);
+            IBuildResult buildResult = await BuildAsync(null, null, dotnetBuild, customArgs);
 
-            buildResult.Rebuild();
+            await buildResult.RebuildAsync();
 
             Assert.Multiple(() =>
             {
@@ -191,8 +191,8 @@ namespace UnitTests
         [Test]
         public void Should_Create_All_Project_Containing_Directories_In_Same_Temp_Directory()
         {
-            _ = Build();
-            _ = Build();
+            _ = BuildAsync();
+            _ = BuildAsync();
 
             _mockIOUtiities.Verify(mock => mock.CreateTempDirectory(), Times.Once);
         }
@@ -200,7 +200,7 @@ namespace UnitTests
         [Test]
         public void Should_TearDown()
         {
-            _ = Build();
+            _ = BuildAsync();
 
             _nugetBuildTargetsTestSetupBuilder!.TearDown();
 

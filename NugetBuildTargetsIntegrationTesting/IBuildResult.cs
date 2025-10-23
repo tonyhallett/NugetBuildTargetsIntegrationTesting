@@ -16,6 +16,6 @@
 
         IBuildResult AddFiles(IEnumerable<(string Contents, string RelativePath)> files);
 
-        void Rebuild(string? args = null);
+        Task RebuildAsync(string? args = null);
     }
 }

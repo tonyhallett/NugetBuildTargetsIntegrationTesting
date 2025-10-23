@@ -8,9 +8,9 @@ namespace NugetBuildTargetsIntegrationTesting.DotNet
     {
         public string DotNetFileName { get; set; } = "dotnet";
 
-        private string? GetInstallDirectory(string sdkVersion)
+        private async Task<string?> GetInstallDirectoryAsync(string sdkVersion)
         {
-            ProcessResult result = ProcessHelper.StartAndWait(DotNetFileName, "--list-sdks");
+            ProcessResult result = await ProcessHelper.StartAndWaitAsync(DotNetFileName, "--list-sdks");
             if (result.ExitCode != 0)
             {
                 return null;
@@ -35,16 +35,16 @@ namespace NugetBuildTargetsIntegrationTesting.DotNet
             return null;
         }
 
-        private string? GetVersion()
+        private async Task<string?> GetVersionAsync()
         {
-            ProcessResult result = ProcessHelper.StartAndWait(DotNetFileName, "--version");
+            ProcessResult result = await ProcessHelper.StartAndWaitAsync(DotNetFileName, "--version");
             return result.ExitCode != 0 ? null : result.StandardOutput.Trim();
         }
 
-        public string? GetActiveSdkSdksPath()
+        public async Task<string?> GetActiveSdkSdksPathAsync()
         {
-            string? version = GetVersion();
-            return version == null ? null : GetInstallDirectory(version);
+            string? version = await GetVersionAsync();
+            return version == null ? null : await GetInstallDirectoryAsync(version);
         }
     }
 }

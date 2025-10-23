@@ -18,18 +18,18 @@ namespace NugetBuildTargetsIntegrationTesting.Building
 
         private static string CreatePropertySwitch(string name, string value) => $"-property:{name}={value}";
 
-        public ProcessResult Build(string projectFilePath, bool isDotnet, string arguments, string workingDirectory)
+        public Task<ProcessResult> BuildAsync(string projectFilePath, bool isDotnet, string arguments, string workingDirectory)
         {
             projectFilePath = QuotePath(projectFilePath);
             return isDotnet
-                ? DotNetBuild(projectFilePath, arguments, workingDirectory)
-                : MSBuildBuild(projectFilePath, arguments, workingDirectory);
+                ? DotNetBuildAsync(projectFilePath, arguments, workingDirectory)
+                : MSBuildBuildAsync(projectFilePath, arguments, workingDirectory);
         }
 
-        private ProcessResult MSBuildBuild(string quotedProjectFilePath, string arguments, string workingDirectory)
+        private Task<ProcessResult> MSBuildBuildAsync(string quotedProjectFilePath, string arguments, string workingDirectory)
         {
             arguments = arguments.Length == 0 ? _defaultMSBuildArguments : arguments;
-            return ProcessHelper.StartAndWait(
+            return ProcessHelper.StartAndWaitAsync(
                 _msBuildFileName,
                 $"{QuotePath(quotedProjectFilePath)} {arguments}",
                 workingDirectory);
@@ -37,11 +37,11 @@ namespace NugetBuildTargetsIntegrationTesting.Building
 
         private static string QuotePath(string path) => $"\"{path}\"";
 
-        private ProcessResult DotNetBuild(string quotedProjectFilePath, string arguments, string workingDirectory)
+        private Task<ProcessResult> DotNetBuildAsync(string quotedProjectFilePath, string arguments, string workingDirectory)
         {
             arguments = arguments.Length == 0 ? _defaultDotNetBuildArguments : arguments;
             arguments = $"build {quotedProjectFilePath} {arguments}";
-            return ProcessHelper.StartAndWait(_dotnetFileName, arguments, workingDirectory);
+            return ProcessHelper.StartAndWaitAsync(_dotnetFileName, arguments, workingDirectory);
         }
 
         public void SetCommandPaths(string? dotNet, string? msBuild)

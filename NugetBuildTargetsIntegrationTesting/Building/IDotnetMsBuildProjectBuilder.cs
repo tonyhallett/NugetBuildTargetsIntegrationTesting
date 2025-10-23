@@ -4,7 +4,7 @@ namespace NugetBuildTargetsIntegrationTesting.Building
 {
     internal interface IDotnetMsBuildProjectBuilder
     {
-        ProcessResult Build(string projectFilePath, bool isDotnet, string arguments, string workingDirectory);
+        Task<ProcessResult> BuildAsync(string projectFilePath, bool isDotnet, string arguments, string workingDirectory);
 
         void SetCommandPaths(string? dotNet, string? msBuild);
     }

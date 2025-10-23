@@ -2,6 +2,6 @@
 {
     internal interface IBuildManager
     {
-        BuildResult Build(ProjectBuildContext projectContext, bool isDotnet, string arguments);
+        Task<BuildResult> BuildAsync(ProjectBuildContext projectContext, bool isDotnet, string arguments);
     }
 }

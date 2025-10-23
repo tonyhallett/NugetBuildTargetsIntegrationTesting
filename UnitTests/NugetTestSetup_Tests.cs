@@ -8,23 +8,23 @@ namespace UnitTests
     internal sealed class NugetTestSetup_Tests
     {
         [Test]
-        public void Should_Setup_The_Nuget_Temp_Environment_To_Install_Packages_Withing_Project_Output()
+        public async Task Should_Setup_The_Nuget_Temp_Environment_To_Install_Packages_Withing_Project_Output()
         {
             var mockNugetTempEnvironmentManager = new Mock<INugetTempEnvironmentManager>();
             var nugetTestSetup = new NugetTestSetup(new Mock<IMsBuildProjectHelper>().Object, mockNugetTempEnvironmentManager.Object);
             var project = new XDocument();
-            nugetTestSetup.Setup("path.nupkg", project);
+            await nugetTestSetup.SetupAsync("path.nupkg", project);
 
-            mockNugetTempEnvironmentManager.Verify(nugetTempEnvironmentManager => nugetTempEnvironmentManager.Setup("path.nupkg", project, "$(BaseIntermediateOutputPath)\\packages", null));
+            mockNugetTempEnvironmentManager.Verify(nugetTempEnvironmentManager => nugetTempEnvironmentManager.SetupAsync("path.nupkg", project, "$(BaseIntermediateOutputPath)\\packages", null));
         }
 
         [Test]
-        public void Should_AddPackageReference_To_The_Nupkg_In_The_Dependent_Project()
+        public async Task Should_AddPackageReference_To_The_Nupkg_In_The_Dependent_Project()
         {
             var mockMsBuildProjectHelper = new Mock<IMsBuildProjectHelper>();
             var nugetTestSetup = new NugetTestSetup(mockMsBuildProjectHelper.Object, new Mock<INugetTempEnvironmentManager>().Object);
             var project = new XDocument();
-            nugetTestSetup.Setup("path.nupkg", project);
+            await nugetTestSetup.SetupAsync("path.nupkg", project);
 
             mockMsBuildProjectHelper.Verify(msBuildProjectHelper => msBuildProjectHelper.AddPackageReference(project, "path.nupkg"));
         }

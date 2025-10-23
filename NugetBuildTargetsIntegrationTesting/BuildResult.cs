@@ -7,7 +7,7 @@ namespace NugetBuildTargetsIntegrationTesting
             DirectoryInfo containingDirectory,
             ProcessResult processResult,
             Action<IEnumerable<(string Contents, string RelativePath)>> addFiles,
-            Func<string?, ProcessResult> rebuild) : IBuildResult
+            Func<string?, Task<ProcessResult>> rebuild) : IBuildResult
     {
         public DirectoryInfo ProjectDirectory { get; } = projectDirectory;
 
@@ -29,6 +29,6 @@ namespace NugetBuildTargetsIntegrationTesting
             return this;
         }
 
-        public void Rebuild(string? args = null) => ProcessResult = rebuild(args);
+        public async Task RebuildAsync(string? args = null) => ProcessResult = await rebuild(args);
     }
 }

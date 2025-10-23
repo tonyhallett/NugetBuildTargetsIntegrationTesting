@@ -29,14 +29,17 @@
             return this;
         }
 
-        public IBuildResult BuildWithDotNet(string arguments = "") => BuildProject(true, arguments);
+        public Task<IBuildResult> BuildWithDotNetAsync(string arguments = "") => BuildProject(true, arguments);
 
-        public IBuildResult BuildWithMSBuild(string arguments = "") => BuildProject(false, arguments);
+        public Task<IBuildResult> BuildWithMSBuildAsync(string arguments = "") => BuildProject(false, arguments);
 
-        private BuildResult BuildProject(bool isDotNet, string arguments)
-            => buildManager.Build(
+        private async Task<IBuildResult> BuildProject(bool isDotNet, string arguments)
+        {
+            BuildResult result = await buildManager.BuildAsync(
                 new ProjectBuildContext(_projectContents!, _relativePath!, _nuPkgPath!, _files),
                 isDotNet,
                 arguments);
+            return result;
+        }
     }
 }
